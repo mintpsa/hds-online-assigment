@@ -1,4 +1,5 @@
 import type { LlmClient } from "./llm.interface.js";
+import { logger } from "../utils/logger.js";
 
 interface LmStudioClientOptions {
   baseUrl?: string;
@@ -16,12 +17,16 @@ export class LmStudioClient implements LlmClient {
   private apiToken: string | undefined;
 
   constructor(options: LmStudioClientOptions) {
-    this.baseUrl = options.baseUrl ?? "http://localhost:1234";
+    this.baseUrl = options.baseUrl ?? "http://127.0.0.1:1234";
     this.model = options.model;
     this.apiToken = options.apiToken ?? process.env.LM_STUDIO_API_TOKEN;
   }
 
   async send(prompt: string): Promise<string> {
+    logger.info(
+      { model: this.model, baseUrl: this.baseUrl },
+      "lmstudio: sending request",
+    );
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
@@ -46,6 +51,7 @@ export class LmStudioClient implements LlmClient {
     if (!message?.content) {
       throw new Error("LM Studio returned no message content in the response.");
     }
+    logger.info({ model: this.model }, "lmstudio: response received");
     return message.content;
   }
 }

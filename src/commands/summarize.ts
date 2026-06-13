@@ -7,6 +7,7 @@ import { summarizeDiff } from "../services/summarize.service.js";
 import { OpenRouterClient } from "../llm/openrouter.client.js";
 import { LmStudioClient } from "../llm/lmstudio.client.js";
 import type { LlmClient } from "../llm/llm.interface.js";
+import { logger } from "../utils/logger.js";
 
 type Backend = "openrouter" | "lmstudio";
 
@@ -21,7 +22,7 @@ interface SummarizeOptions {
 
 const DEFAULT_MODELS: Record<Backend, string> = {
   openrouter: "anthropic/claude-haiku-4-5",
-  lmstudio: "qwen/qwen3-4b",
+  lmstudio: "google/gemma-4-e4b",
 };
 
 function createClient(backend: Backend, model: string): LlmClient {
@@ -61,6 +62,10 @@ export function makeSummarizeCommand(): Command {
         process.exit(1);
       }
 
+      logger.info(
+        { old: options.old, new: options.new },
+        "summarize: reading configs",
+      );
       const [configOld, configNew] = await Promise.all([
         readConfig(options.old),
         readConfig(options.new),
@@ -70,10 +75,18 @@ export function makeSummarizeCommand(): Command {
 
       let gameContext: string | undefined;
       if (options.context) {
+        logger.info(
+          { file: options.context },
+          "summarize: loading game context",
+        );
         gameContext = await readFile(options.context, "utf-8");
       }
 
       const report = await summarizeDiff(diffs, client, gameContext);
+      logger.info(
+        { highlights: report.highlights.length },
+        "summarize: complete",
+      );
 
       if (options.format === "json") {
         console.log(JSON.stringify(report, null, 2));

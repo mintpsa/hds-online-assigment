@@ -1,5 +1,6 @@
 import type { ConfigDiff, SummaryReport } from "../types/index.js";
 import type { LlmClient } from "../llm/llm.interface.js";
+import { logger } from "../utils/logger.js";
 
 function buildPrompt(diffs: ConfigDiff[], gameContext?: string): string {
   const contextBlock = gameContext
@@ -48,6 +49,7 @@ export async function summarizeDiff(
   gameContext?: string,
 ): Promise<SummaryReport> {
   if (diffs.length === 0) {
+    logger.info("summarize: no changes detected, skipping LLM call");
     return {
       changeCount: 0,
       summary: "No changes detected between the two config versions.",
@@ -55,8 +57,13 @@ export async function summarizeDiff(
     };
   }
 
+  logger.info(
+    { changes: diffs.length, hasContext: Boolean(gameContext) },
+    "summarize: sending diff to LLM",
+  );
   const prompt = buildPrompt(diffs, gameContext);
   const raw = await client.send(prompt);
+  logger.info("summarize: LLM response received, parsing");
   const { summary, highlights } = parseResponse(raw);
 
   return { changeCount: diffs.length, summary, highlights };

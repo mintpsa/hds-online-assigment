@@ -1,5 +1,6 @@
 import { OpenRouter } from "@openrouter/sdk";
 import type { LlmClient } from "./llm.interface.js";
+import { logger } from "../utils/logger.js";
 
 interface OpenRouterClientOptions {
   apiKey?: string;
@@ -23,6 +24,7 @@ export class OpenRouterClient implements LlmClient {
   }
 
   async send(prompt: string): Promise<string> {
+    logger.info({ model: this.model }, "openrouter: sending request");
     const result = await this.client.chat.send({
       chatRequest: {
         model: this.model,
@@ -33,6 +35,7 @@ export class OpenRouterClient implements LlmClient {
     if (typeof content !== "string") {
       throw new Error("OpenRouter returned no text content in the response.");
     }
+    logger.info({ model: this.model }, "openrouter: response received");
     return content;
   }
 }

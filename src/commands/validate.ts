@@ -1,16 +1,28 @@
 import { Command } from "commander";
-import type { CliOptions, ValidationFinding } from "../types/index.js";
+import type { ValidationFinding, OutputFormat } from "../types/index.js";
 import { readConfig } from "../repositories/config.repository.js";
 import { validateConfig } from "../services/validation.service.js";
+import { logger } from "../utils/logger.js";
+
+interface ValidateOptions {
+  input: string;
+  format: OutputFormat;
+}
 
 export function makeValidateCommand(): Command {
   return new Command("validate")
     .description("Read a slot game config file and produce a validation report")
-    .argument("<file>", "path to the config file")
+    .requiredOption("--input <file>", "path to the config file")
     .option("--format <format>", 'output format: "text" or "json"', "text")
-    .action(async (file: string, options: CliOptions) => {
-      const config = await readConfig(file);
+    .action(async (options: ValidateOptions) => {
+      logger.info({ file: options.input }, "validate: reading config");
+      const config = await readConfig(options.input);
+      logger.info("validate: running rules");
       const report = await validateConfig(config);
+      logger.info(
+        { valid: report.valid, findings: report.findings.length },
+        "validate: complete",
+      );
 
       if (options.format === "json") {
         console.log(JSON.stringify(report, null, 2));
@@ -19,7 +31,7 @@ export function makeValidateCommand(): Command {
 
       const status = report.valid ? "✓ VALID" : "✗ INVALID";
       console.log(`\nValidation result: ${status}`);
-      console.log(`File: ${file}\n`);
+      console.log(`File: ${options.input}\n`);
 
       if (report.findings.length === 0) {
         console.log("No issues found.");
