@@ -2,6 +2,8 @@
 import { Command } from "commander";
 import { makeValidateCommand } from "./commands/validate.js";
 import { makeDiffCommand } from "./commands/diff.js";
+import { makeIoCommand } from "./commands/io.js";
+import { makeSummarizeCommand } from "./commands/summarize.js";
 
 const program = new Command();
 
@@ -13,6 +15,8 @@ program
 
 program.addCommand(makeValidateCommand());
 program.addCommand(makeDiffCommand());
+program.addCommand(makeIoCommand());
+program.addCommand(makeSummarizeCommand());
 
 if (process.argv.length <= 2) {
   program.help();
