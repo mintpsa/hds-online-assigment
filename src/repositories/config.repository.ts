@@ -1,5 +1,6 @@
 import type { SlotConfig } from "../types/index.js";
+import { loadJson } from "../utils/io.js";
 
 export async function readConfig(filePath: string): Promise<SlotConfig> {
-  throw new Error(`readConfig not yet implemented for path: ${filePath}`);
+  return loadJson<SlotConfig>(filePath);
 }

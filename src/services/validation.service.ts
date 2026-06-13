@@ -1,8 +1,32 @@
-import type { SlotConfig, ValidationReport } from "../types/index.js";
+import type {
+  SlotConfig,
+  ValidationReport,
+  ValidationRule,
+} from "../types/index.js";
+import validateBetLevels from "../rules/bet-levels.rule.js";
+import validateEventSchedule from "../rules/event-schedule.rule.js";
+import validateFeatureFlags from "../rules/feature-flags.rule.js";
+import validateJackpot from "../rules/jackpot.rule.js";
+import validateLiveopsCampaigns from "../rules/liveops-campaigns.rule.js";
+import validatePayoutTable from "../rules/payout-table.rule.js";
+import validateRequiredFields from "../rules/required-fields.rule.js";
+import validateRewards from "../rules/rewards.rule.js";
+
+const rules: ValidationRule[] = [
+  validateRequiredFields,
+  validateBetLevels,
+  validateRewards,
+  validateEventSchedule,
+  validateFeatureFlags,
+  validateJackpot,
+  validateLiveopsCampaigns,
+  validatePayoutTable,
+];
 
 export async function validateConfig(
   config: SlotConfig,
 ): Promise<ValidationReport> {
-  void config;
-  return { valid: true, findings: [] };
+  const findings = rules.flatMap((rule) => rule(config));
+  const valid = findings.every((f) => f.severity !== "error");
+  return { valid, findings };
 }

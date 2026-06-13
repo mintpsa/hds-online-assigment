@@ -36,6 +36,15 @@ AI assistance was used for:
 
 The plan itself — what to build, how to structure it, what the validation rules should check — remained a human decision throughout.
 
+## Future improvements
+
+The current validation engine is rule-based and deterministic — the same config always produces the same findings. A natural next layer would be an **AI-assisted risk pass** that runs after the rule engine:
+
+- Rules catch _known-bad_ states (invalid values, constraint violations)
+- An LLM could flag _suspicious-but-valid_ combinations that rules cannot express — e.g. jackpot contribution rates that are individually within bounds but collectively drain faster than intended, or reward multipliers that interact in unexpected ways across player segments
+
+This would function as a second-pass "risk advisor", not a replacement for rules. The rule engine output would be its input, and its findings would be advisory (`info` severity) rather than blocking. Guardrails (structured output, severity caps) would be needed to prevent false positives from blocking valid configs.
+
 ## Development
 
 ```bash
