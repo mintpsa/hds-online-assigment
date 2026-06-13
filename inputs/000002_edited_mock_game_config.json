@@ -1,0 +1,160 @@
+{
+  "game_name": "HDS Coding Assignment",
+  "slot_machine_id": "SLOT_ENV_042",
+  "app_version_target": ">=2.1.0",
+  "bet_levels": [10, 50, 100, 250, 500, 1000, 5000],
+  "reel_symbols": {
+    "ID_00": "WILD",
+    "ID_01": "SCATTER_BONUS",
+    "ID_02": "HIGH_ARTIFACT",
+    "ID_03": "HIGH_EXPLORER",
+    "ID_04": "MID_COMPASS",
+    "ID_05": "MID_MAP",
+    "ID_06": "LOW_A",
+    "ID_07": "LOW_K",
+    "ID_08": "LOW_Q",
+    "ID_09": "LOW_J",
+    "ID_10": "LOW_10"
+  },
+  "payout_table": {
+    "HIGH_ARTIFACT": {
+      "3": 50,
+      "4": 200,
+      "5": 1000
+    },
+    "HIGH_EXPLORER": {
+      "3": 40,
+      "4": 150,
+      "5": 750
+    },
+    "MID_COMPASS": {
+      "3": 20,
+      "4": 75,
+      "5": 250
+    },
+    "LOW_A": {
+      "3": 5,
+      "4": 15,
+      "5": 50
+    },
+    "LOW_K": {
+      "3": 5,
+      "4": 15,
+      "5": 50
+    }
+  },
+  "feature_flags": {
+    "is_tournament_enabled": true,
+    "is_jackpot_enabled": true,
+    "enable_buy_feature": false,
+    "use_high_res_assets": true,
+    "enable_haptic_feedback": true
+  },
+  "event_schedule": [
+    {
+      "event_id": "EVT_GOLDEN_WEEKEND",
+      "event_name": "Golden Weekend Madness",
+      "start_date": "2026-06-13T00:00:00Z",
+      "end_date": "2026-06-15T23:59:59Z",
+      "event_type": "xp_multiplier",
+      "multiplier_value": 2.0
+    }
+  ],
+  "rewards": {
+    "daily_login_base": 1000,
+    "daily_login_streak_multiplier": 0.2,
+    "ad_watch_reward": 500,
+    "social_share_reward": 2500,
+    "level_up_base": 5000
+  },
+  "jackpot_settings": {
+    "jackpot_type": "progressive",
+    "currency": "coins",
+    "tiers": {
+      "mini": {
+        "seed": 1000,
+        "contribution_pct": 0.01
+      },
+      "minor": {
+        "seed": 5000,
+        "contribution_pct": 0.02
+      },
+      "major": {
+        "seed": 25000,
+        "contribution_pct": 0.03
+      },
+      "grand": {
+        "seed": 1000000,
+        "contribution_pct": 0.04
+      }
+    }
+  },
+  "player_segments": [
+    {
+      "segment_id": "SEG_WHALE",
+      "segment_name": "Whales",
+      "conditions": {
+        "lifetime_value_usd": {
+          ">=": 1000
+        }
+      },
+      "overrides": {
+        "bet_limit_multiplier": 5.0,
+        "vip_support": true
+      }
+    },
+    {
+      "segment_id": "SEG_NEW",
+      "segment_name": "New Players",
+      "conditions": {
+        "days_since_install": {
+          "<=": 3
+        }
+      },
+      "overrides": {
+        "xp_multiplier": 2.0,
+        "show_tutorial": true
+      }
+    }
+  ],
+  "liveops_campaign_settings": [
+    {
+      "campaign_id": "CAMP_SUMMER_26",
+      "active_campaign": "Summer Slots Fiesta",
+      "ui_theme": "tropical_beach",
+      "promotional_offers": [
+        {
+          "pack_id": "starter_summer",
+          "price_usd": 1.99,
+          "coins": 50000,
+          "bonus_spins": 10
+        },
+        {
+          "pack_id": "mega_summer",
+          "price_usd": 19.99,
+          "coins": 750000,
+          "bonus_spins": 100
+        }
+      ]
+    },
+    {
+      "campaign_id": "CAMP_SUMMER_27",
+      "active_campaign": "Summer Slots Fiesta",
+      "ui_theme": "tropical_beach",
+      "promotional_offers": [
+        {
+          "pack_id": "starter_summer",
+          "price_usd": 19.99,
+          "coins": 500000,
+          "bonus_spins": 100
+        },
+        {
+          "pack_id": "mega_summer",
+          "price_usd": 199.99,
+          "coins": 7500000,
+          "bonus_spins": 1000
+        }
+      ]
+    }
+  ]
+}
