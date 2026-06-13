@@ -52,6 +52,7 @@ export class LmStudioClient implements LlmClient {
       throw new Error("LM Studio returned no message content in the response.");
     }
     logger.info({ model: this.model }, "lmstudio: response received");
+
     return message.content;
   }
 }

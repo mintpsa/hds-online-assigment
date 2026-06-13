@@ -9,33 +9,135 @@ A CLI tool that reads slot game configuration files and produces a validation re
 - **Diffs versions** — compares two config snapshots and reports field-level changes
 - **Reports for multiple audiences** — human-readable CLI output for engineers and QA; JSON output for LiveOps tooling
 
-## Usage
+## Commands
+
+### `validate` — validate a config file
+
+Reads a single config file, runs all validation rules, and reports findings grouped by severity (`error`, `warning`, `info`).
 
 ```bash
-# Validate a single config
+# Human-readable output
 node dist/index.js validate --input path/to/game.json
 
-# Diff two configs
+# Structured JSON output (pipe-friendly)
+node dist/index.js validate --input path/to/game.json --format json
+```
+
+| Option              | Required | Description                |
+| ------------------- | -------- | -------------------------- |
+| `--input <file>`    | yes      | Path to the config file    |
+| `--format <format>` | no       | `text` (default) or `json` |
+
+---
+
+### `diff` — compare two config versions
+
+Compares two config files and shows field-level additions and removals.
+
+```bash
+# Human-readable diff
 node dist/index.js diff --old path/to/game-v1.json --new path/to/game-v2.json
 
-# Diff with JSON output (structured field-level changes)
+# Structured JSON diff (dot-notation paths with old/new values)
 node dist/index.js diff --old path/to/game-v1.json --new path/to/game-v2.json --format json
+```
 
-# Summarize changes with an LLM (OpenRouter — requires OPENROUTER_API_KEY)
+| Option              | Required | Description                   |
+| ------------------- | -------- | ----------------------------- |
+| `--old <file>`      | yes      | Path to the base (old) config |
+| `--new <file>`      | yes      | Path to the new config        |
+| `--format <format>` | no       | `text` (default) or `json`    |
+
+---
+
+### `summarize` — LLM-generated change summary
+
+Diffs two configs and sends the structured diff to an LLM for a plain-English summary with highlights. Requires an API key for OpenRouter; LM Studio runs locally without one.
+
+```bash
+# OpenRouter (requires OPENROUTER_API_KEY env var)
 node dist/index.js summarize --old path/to/game-v1.json --new path/to/game-v2.json
 
-# Summarize with LM Studio (local, no API key needed)
-node dist/index.js summarize --old path/to/game-v1.json --new path/to/game-v2.json --backend lmstudio
+# LM Studio (local, no API key needed)
+node dist/index.js summarize \
+  --old path/to/game-v1.json \
+  --new path/to/game-v2.json \
+  --backend lmstudio
 
-# Summarize with game context for richer output
+# Add a game description file for richer, more context-aware output
 node dist/index.js summarize \
   --old inputs/000001_mock_game_config.json \
   --new inputs/000002_edited_mock_game_config.json \
   --context inputs/game-info.md
 
-# Output JSON report
-node dist/index.js validate --input path/to/game.json --format json
+# JSON output (changeCount + summary + highlights array)
+node dist/index.js summarize \
+  --old path/to/game-v1.json \
+  --new path/to/game-v2.json \
+  --format json
 ```
+
+| Option                | Required | Description                                           |
+| --------------------- | -------- | ----------------------------------------------------- |
+| `--old <file>`        | yes      | Path to the base (old) config                         |
+| `--new <file>`        | yes      | Path to the new config                                |
+| `--context <file>`    | no       | Plain-text game description to ground the LLM summary |
+| `--backend <backend>` | no       | `openrouter` (default) or `lmstudio`                  |
+| `--model <model>`     | no       | Override the default model for the chosen backend     |
+| `--format <format>`   | no       | `text` (default) or `json`                            |
+
+Default models: `anthropic/claude-haiku-4-5` (OpenRouter), `google/gemma-4-e4b` (LM Studio).
+
+---
+
+### `report` — combined markdown report
+
+Combines `diff` + `summarize` into a single markdown file with three sections: **Info** (file paths and change count), **Difference** (fenced diff block), and **Summary** (LLM narrative + highlights). Suitable for sharing with LiveOps, QA, or engineering.
+
+```bash
+# Basic report — written to reports/<old>-vs-<new>.md
+node dist/index.js report \
+  --old inputs/000001_mock_game_config.json \
+  --new inputs/000002_edited_mock_game_config.json
+
+# With game context and LM Studio backend
+node dist/index.js report \
+  --old inputs/000001_mock_game_config.json \
+  --new inputs/000002_edited_mock_game_config.json \
+  --context inputs/game-info.md \
+  --backend lmstudio
+
+# Custom output path
+node dist/index.js report \
+  --old inputs/000001_mock_game_config.json \
+  --new inputs/000002_edited_mock_game_config.json \
+  --output my-report.md
+```
+
+On success, prints: `Report is ready at reports/<name>.md`
+
+| Option                | Required | Description                                                  |
+| --------------------- | -------- | ------------------------------------------------------------ |
+| `--old <file>`        | yes      | Path to the base (old) config                                |
+| `--new <file>`        | yes      | Path to the new config                                       |
+| `--context <file>`    | no       | Plain-text game description to ground the LLM summary        |
+| `--backend <backend>` | no       | `openrouter` (default) or `lmstudio`                         |
+| `--model <model>`     | no       | Override the default model for the chosen backend            |
+| `--output <path>`     | no       | Output path (default: `reports/<old-stem>-vs-<new-stem>.md`) |
+
+---
+
+### `io load-json` — inspect a raw config file
+
+Reads a JSON file and pretty-prints it to stdout. Useful for quickly inspecting a config before running other commands.
+
+```bash
+node dist/index.js io load-json --input path/to/game.json
+```
+
+| Option           | Required | Description           |
+| ---------------- | -------- | --------------------- |
+| `--input <file>` | yes      | Path to the JSON file |
 
 ## How AI tools were used
 
@@ -87,6 +189,34 @@ The current validation engine is rule-based and deterministic — the same confi
 - An LLM could flag _suspicious-but-valid_ combinations that rules cannot express — e.g. jackpot contribution rates that are individually within bounds but collectively drain faster than intended, or reward multipliers that interact in unexpected ways across player segments
 
 This would function as a second-pass "risk advisor", not a replacement for rules. The rule engine output would be its input, and its findings would be advisory (`info` severity) rather than blocking. Guardrails (structured output, severity caps) would be needed to prevent false positives from blocking valid configs.
+
+## Prerequisites
+
+- **Node.js** v20 or later
+- **npm** v10 or later
+
+### Install dependencies
+
+```bash
+npm install
+npm run build
+```
+
+### Environment variables
+
+Copy `.env.example` to `.env` and fill in the values you need:
+
+```bash
+cp .env.example .env
+```
+
+| Variable              | Required                            | Description                                                                                                                                           |
+| --------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OPENROUTER_API_KEY`  | Required for `--backend openrouter` | API key from [openrouter.ai](https://openrouter.ai). Used by the `summarize` and `report` commands when the default OpenRouter backend is selected.   |
+| `LM_STUDIO_API_TOKEN` | Optional                            | Bearer token for LM Studio's REST API. Most local LM Studio setups do not require this — leave blank unless your instance has authentication enabled. |
+| `LOG_LEVEL`           | Optional                            | Pino log level written to stderr. Accepted values: `trace`, `debug`, `info` (default), `warn`, `error`, `fatal`, `silent`.                            |
+
+The `validate` and `diff` commands run without any env vars. Only `summarize` and `report` require credentials (for the LLM backend).
 
 ## Development
 
