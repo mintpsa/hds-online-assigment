@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Objective
 
 Build a CLI tool that reads slot game configuration files and produces a validation report. The tool must answer:
+
 - Is the configuration valid?
 - Are there risky or suspicious values?
 - What changed between two configuration versions?

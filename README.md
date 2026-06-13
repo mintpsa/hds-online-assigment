@@ -29,6 +29,7 @@ This project was developed with assistance from **Claude Code** (powered by `cla
 The methodology kept humans in the driving seat: the developer defined the overall plan, architecture, and requirements, then directed Claude Code to implement the smaller details — scaffolding files, writing scripts, generating boilerplate. AI suggestions were reviewed and accepted or adjusted before being applied; the tool was never run in a fully automated mode without supervision.
 
 AI assistance was used for:
+
 - Generating the initial `CLAUDE.md` and `README.md` from a project brief
 - Adding `package.json` scripts for linting and formatting
 - Drafting code structure and file layout based on human-defined architecture
