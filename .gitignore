@@ -67,3 +67,10 @@ package-lock.json
 
 dist/
 *.tsbuildinfo
+
+# Environment
+.env*
+!.env.example
+
+# Reports files
+reports/*

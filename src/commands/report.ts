@@ -5,9 +5,11 @@ import { diffJson } from "diff";
 import { readConfig } from "../repositories/config.repository.js";
 import { diffConfigs } from "../services/diff.service.js";
 import { summarizeDiff } from "../services/summarize.service.js";
+import { validateConfig } from "../services/validation.service.js";
 import { OpenRouterClient } from "../llm/openrouter.client.js";
 import { LmStudioClient } from "../llm/lmstudio.client.js";
 import type { LlmClient } from "../llm/llm.interface.js";
+import type { ValidationReport } from "../types/index.js";
 import { logger } from "../utils/logger.js";
 
 type Backend = "openrouter" | "lmstudio";
@@ -56,11 +58,32 @@ function buildTextDiff(configOld: unknown, configNew: unknown): string {
   return lines.join("\n");
 }
 
+function buildValidationSection(label: string, report: ValidationReport): string {
+  const status = report.valid ? "VALID" : "INVALID";
+  if (report.findings.length === 0) {
+    return `### ${label}\n\n**Status:** ${status} — no issues found.\n`;
+  }
+
+  const rows = report.findings
+    .map((f) => `| ${f.severity} | \`${f.field}\` | ${f.message} |`)
+    .join("\n");
+
+  return (
+    `### ${label}\n\n` +
+    `**Status:** ${status}\n\n` +
+    `| Severity | Field | Message |\n` +
+    `|---|---|---|\n` +
+    `${rows}\n`
+  );
+}
+
 function buildMarkdown(
   oldPath: string,
   newPath: string,
   changeCount: number,
   textDiff: string,
+  validationOld: ValidationReport,
+  validationNew: ValidationReport,
   summary: string,
   highlights: string[],
 ): string {
@@ -80,11 +103,18 @@ function buildMarkdown(
       ? `\n\n### Highlights\n\n${highlights.map((h) => `- ${h}`).join("\n")}`
       : "";
 
+  const validationSection =
+    buildValidationSection(`Old: \`${oldPath}\``, validationOld) +
+    `\n` +
+    buildValidationSection(`New: \`${newPath}\``, validationNew);
+
   return (
     `# Config Diff Report\n\n` +
     `## Info\n\n` +
     `${infoTable}\n\n` +
     `**Changes detected:** ${changeCount}\n\n` +
+    `## Validation\n\n` +
+    `${validationSection}\n` +
     `## Difference\n\n` +
     `${diffSection}\n\n` +
     `## Summary\n\n` +
@@ -136,8 +166,12 @@ export function makeReportCommand(): Command {
         readConfig(options.new),
       ]);
 
-      logger.info("report: computing diffs");
-      const diffs = await diffConfigs(configOld, configNew);
+      logger.info("report: computing diffs and running validation");
+      const [diffs, validationOld, validationNew] = await Promise.all([
+        diffConfigs(configOld, configNew),
+        validateConfig(configOld),
+        validateConfig(configNew),
+      ]);
       const textDiff = buildTextDiff(configOld, configNew);
 
       let gameContext: string | undefined;
@@ -156,6 +190,8 @@ export function makeReportCommand(): Command {
         options.new,
         summaryReport.changeCount,
         textDiff,
+        validationOld,
+        validationNew,
         summaryReport.summary,
         summaryReport.highlights,
       );
