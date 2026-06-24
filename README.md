@@ -73,7 +73,62 @@ Example — validate that `bet_levels` are always in ascending order:
 npm run build
 ```
 
-Static assets are written to `dist/`. Serve with any static file server.
+Static assets are written to `dist/`. The output is a standard SPA bundle (one `index.html` + hashed JS/CSS chunks) that can be served from any static host.
+
+---
+
+## Deployment
+
+The web client is a fully static SPA — there is no server-side component. The build output in `dist/` can be deployed to any CDN or static hosting provider.
+
+### Cloudflare Pages
+
+1. Push the repository to GitHub.
+2. In the Cloudflare dashboard, create a new Pages project and connect the repository.
+3. Set the build configuration:
+
+   | Setting                | Value           |
+   | ---------------------- | --------------- |
+   | Build command          | `npm run build` |
+   | Build output directory | `dist`          |
+   | Node.js version        | `22`            |
+
+4. Deploy. Cloudflare Pages handles HTTPS, global CDN distribution, and preview deployments for every pull request automatically.
+
+For manual deploys via the CLI:
+
+```bash
+npm run build
+npx wrangler pages deploy dist --project-name your-project-name
+```
+
+### Generic CDN / static server
+
+Because the app is an SPA, configure your host to serve `index.html` for all routes (a catch-all rewrite rule).
+
+### Future improvements
+
+The current deployment is intentionally simple — a single static bundle with no backend. As the tool grows to serve multiple teams, it will need:
+
+- **Authentication** — gate access per team or per game title; integrate with an identity provider (e.g. Cloudflare Access, Auth0, or an internal SSO).
+- **Config storage with versioning** — persist uploaded config files server-side so teams can browse the full history of a config, not just a local session upload. Each version would be immutable and addressable by a hash or semantic version tag.
+- **Schema storage with versioning** — store schemas alongside configs so a validation run always references the schema version that was active at the time. Schema changes would be tracked the same way as config changes.
+- **Server-side validation and diffing** — moving the AJV validation and diff logic to a server (or a Cloudflare Worker) would allow richer rules (e.g. cross-config consistency checks, database lookups for known-good baseline values) and keep large config payloads off the client.
+- **User-defined AJV keywords via code snippet** — today keywords like `isIncreasing` are hard-coded in `src/client/rules/index.ts`. A future UI could let users paste a JavaScript snippet directly in the browser to register a custom keyword at runtime, without a code deployment. The snippet would be evaluated in a sandboxed context and registered on the shared `ajv` instance:
+
+  ```js
+  // Example snippet a user would paste into the UI
+  {
+    keyword: "isPositive",
+    type: "number",
+    validate(schema, data) {
+      return schema === true ? data > 0 : true;
+    },
+    errors: false,
+  }
+  ```
+
+  The UI would validate the snippet structure before registering it, and registered keywords would persist in `localStorage` alongside stored schemas so they survive page refreshes.
 
 ---
 
