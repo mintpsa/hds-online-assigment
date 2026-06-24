@@ -6,7 +6,8 @@ import { ValidateModal } from "./components/ValidateModal";
 import { ReportModal } from "./components/ReportModal";
 import { readFileText } from "./utils/readFileText";
 import { generateJsonSchemaFromObject } from "./utils/generateJsonSchema";
-import { parse as parseYaml } from "yaml";
+import { parseFileContent } from "./utils/parseFileContent";
+import type { StoredSchema } from "./types";
 import "./index.css";
 import { Editor } from "@monaco-editor/react";
 
@@ -16,11 +17,6 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "differ", label: "Differ" },
   { id: "schemas", label: "Schemas" },
 ];
-
-interface StoredSchema {
-  name: string;
-  content: string;
-}
 
 type ValidateTarget = "left" | "right";
 
@@ -51,7 +47,8 @@ const App = () => {
   const schemaUploadRef = useRef<HTMLInputElement>(null);
 
   const showEditor = !!(leftFile || rightFile);
-  const language = leftFile?.name.endsWith(".json") ? "json" : "yaml";
+  const activeFile = leftFile ?? rightFile;
+  const language = activeFile?.name.endsWith(".json") ? "json" : "yaml";
 
   async function handleLeftFile(file: File) {
     setLeftFile(file);
@@ -67,11 +64,7 @@ const App = () => {
     if (!leftFile || !leftContent) return;
     try {
       const name = leftFile.name.replace(/\.[^.]+$/, "") + ".schema.json";
-      const ext = leftFile.name.split(".").pop()?.toLowerCase();
-      const parsed =
-        ext === "yaml" || ext === "yml"
-          ? (parseYaml(leftContent) as unknown)
-          : (JSON.parse(leftContent) as unknown);
+      const parsed = parseFileContent(leftContent, leftFile.name);
       const content = generateJsonSchemaFromObject(parsed, name);
       const schema: StoredSchema = { name, content };
       setSchemas((prev) => {

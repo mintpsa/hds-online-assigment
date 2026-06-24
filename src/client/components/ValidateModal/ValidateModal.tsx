@@ -1,11 +1,7 @@
 import { useState } from "react";
 import Ajv from "ajv";
-import { parse as parseYaml } from "yaml";
-
-interface StoredSchema {
-  name: string;
-  content: string;
-}
+import type { StoredSchema } from "../../types";
+import { parseFileContent } from "../../utils/parseFileContent";
 
 interface ValidateModalProps {
   fileContent: string;
@@ -23,20 +19,18 @@ interface ValidationResult {
 
 const ajv = new Ajv({ allErrors: true });
 
-function parseFileContent(content: string, fileName: string): unknown {
-  const ext = fileName.split(".").pop()?.toLowerCase();
-  if (ext === "yaml" || ext === "yml") return parseYaml(content) as unknown;
-  return JSON.parse(content) as unknown;
-}
-
 function validate(
   fileContent: string,
   fileName: string,
-  schemaContent: string,
+  schema: StoredSchema,
 ): string[] {
   const data = parseFileContent(fileContent, fileName);
-  const schema = JSON.parse(schemaContent) as object;
-  const valid = ajv.validate(schema, data);
+  const schemaDef = JSON.parse(schema.content) as { $id?: string } & object;
+  const schemaId = schema.name;
+  if (!ajv.getSchema(schemaId)) {
+    ajv.addSchema({ ...schemaDef, $id: schemaId });
+  }
+  const valid = ajv.validate(schemaId, data);
   if (valid) return [];
   return (ajv.errors ?? []).map((e) => {
     const path = e.instancePath || "(root)";
@@ -55,7 +49,7 @@ export function ValidateModal({
 
   function handlePick(schema: StoredSchema) {
     try {
-      const errors = validate(fileContent, fileName, schema.content);
+      const errors = validate(fileContent, fileName, schema);
       setResult({ schemaName: schema.name, errors });
       setView("results");
     } catch (e) {

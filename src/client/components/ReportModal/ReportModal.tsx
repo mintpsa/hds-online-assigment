@@ -1,12 +1,8 @@
 import { useState } from "react";
 import type React from "react";
 import Ajv from "ajv";
-import { parse as parseYaml } from "yaml";
-
-interface StoredSchema {
-  name: string;
-  content: string;
-}
+import type { StoredSchema } from "../../types";
+import { parseFileContent } from "../../utils/parseFileContent";
 
 export interface ReportModalProps {
   leftFile: File;
@@ -22,12 +18,6 @@ export interface ReportModalProps {
 
 const ajv = new Ajv({ allErrors: true });
 
-function parseContent(content: string, fileName: string): unknown {
-  const ext = fileName.split(".").pop()?.toLowerCase();
-  if (ext === "yaml" || ext === "yml") return parseYaml(content) as unknown;
-  return JSON.parse(content) as unknown;
-}
-
 function runValidation(
   content: string,
   fileName: string,
@@ -35,9 +25,13 @@ function runValidation(
 ): { schemaName: string | null; errors: string[] } {
   if (!schema) return { schemaName: null, errors: [] };
   try {
-    const data = parseContent(content, fileName);
-    const schemaDef = JSON.parse(schema.content) as object;
-    const valid = ajv.validate(schemaDef, data);
+    const data = parseFileContent(content, fileName);
+    const schemaDef = JSON.parse(schema.content) as { $id?: string } & object;
+    const schemaId = schema.name;
+    if (!ajv.getSchema(schemaId)) {
+      ajv.addSchema({ ...schemaDef, $id: schemaId });
+    }
+    const valid = ajv.validate(schemaId, data);
     if (valid) return { schemaName: schema.name, errors: [] };
     return {
       schemaName: schema.name,
@@ -93,8 +87,8 @@ function computeDiff(
   rightFile: File,
 ): DiffEntry[] {
   try {
-    const left = flattenObject(parseContent(leftContent, leftFile.name));
-    const right = flattenObject(parseContent(rightContent, rightFile.name));
+    const left = flattenObject(parseFileContent(leftContent, leftFile.name));
+    const right = flattenObject(parseFileContent(rightContent, rightFile.name));
     const allKeys = new Set([...Object.keys(left), ...Object.keys(right)]);
     const entries: DiffEntry[] = [];
     for (const key of allKeys) {

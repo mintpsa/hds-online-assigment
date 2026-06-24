@@ -26,11 +26,13 @@ function classifyDragItems(
     const item = items[i];
     if (item.kind !== "file") return "drag-reject";
     // MIME type is often empty during drag (browser security); accept optimistically
-    if (item.type && !accept.includes(item.type as AcceptedMimeType)) {
-      const isYaml = item.type.includes("yaml");
-      const isJson = item.type === "application/json";
-      if (!isYaml && !isJson) return "drag-reject";
-    }
+    if (!item.type) continue;
+    if (accept.includes(item.type as AcceptedMimeType)) continue;
+    // Same extension fallback as isAccepted for consistency
+    if (item.type === "text/plain") continue;
+    const isYaml = item.type.includes("yaml");
+    const isJson = item.type === "application/json";
+    if (!isYaml && !isJson) return "drag-reject";
   }
   return "drag-over";
 }
