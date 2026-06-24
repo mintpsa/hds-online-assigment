@@ -33,7 +33,12 @@ function validate(fileContent: string, schemaContent: string): string[] {
   });
 }
 
-export function ValidateModal({ fileContent, fileName, schemas, onClose }: ValidateModalProps) {
+export function ValidateModal({
+  fileContent,
+  fileName,
+  schemas,
+  onClose,
+}: ValidateModalProps) {
   const [view, setView] = useState<View>("pick");
   const [result, setResult] = useState<ValidationResult | null>(null);
 
@@ -43,7 +48,10 @@ export function ValidateModal({ fileContent, fileName, schemas, onClose }: Valid
       setResult({ schemaName: schema.name, errors });
       setView("results");
     } catch (e) {
-      setResult({ schemaName: schema.name, errors: [`Parse error: ${(e as Error).message}`] });
+      setResult({
+        schemaName: schema.name,
+        errors: [`Parse error: ${(e as Error).message}`],
+      });
       setView("results");
     }
   }
@@ -76,7 +84,9 @@ export function ValidateModal({ fileContent, fileName, schemas, onClose }: Valid
                 {fileName}
               </h2>
               <span className="text-xs text-gray-400">vs</span>
-              <span className="text-xs text-gray-500 truncate">{result?.schemaName}</span>
+              <span className="text-xs text-gray-500 truncate">
+                {result?.schemaName}
+              </span>
             </div>
           )}
           <button
@@ -89,11 +99,12 @@ export function ValidateModal({ fileContent, fileName, schemas, onClose }: Valid
         </div>
 
         <div className="overflow-y-auto flex-1 p-6">
-          {view === "pick" && (
-            schemas.length === 0 ? (
+          {view === "pick" &&
+            (schemas.length === 0 ? (
               <p className="text-sm text-gray-500">
                 No schemas stored yet. Use{" "}
-                <span className="font-medium">Generate schema</span> to create one.
+                <span className="font-medium">Generate schema</span> to create
+                one.
               </p>
             ) : (
               <ul className="flex flex-col gap-2">
@@ -108,11 +119,11 @@ export function ValidateModal({ fileContent, fileName, schemas, onClose }: Valid
                   </li>
                 ))}
               </ul>
-            )
-          )}
+            ))}
 
-          {view === "results" && result && (
-            result.errors.length === 0 ? (
+          {view === "results" &&
+            result &&
+            (result.errors.length === 0 ? (
               <div className="flex flex-col items-center gap-3 py-6 text-green-600">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -122,14 +133,21 @@ export function ValidateModal({ fileContent, fileName, schemas, onClose }: Valid
                   stroke="currentColor"
                   strokeWidth={1.5}
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4.5 12.75l6 6 9-13.5"
+                  />
                 </svg>
-                <p className="text-base font-semibold">Valid — no errors found</p>
+                <p className="text-base font-semibold">
+                  Valid — no errors found
+                </p>
               </div>
             ) : (
               <div className="flex flex-col gap-3">
                 <p className="text-sm font-medium text-red-600">
-                  {result.errors.length} error{result.errors.length !== 1 ? "s" : ""} found
+                  {result.errors.length} error
+                  {result.errors.length !== 1 ? "s" : ""} found
                 </p>
                 <ul className="flex flex-col gap-2">
                   {result.errors.map((err, i) => (
@@ -137,14 +155,15 @@ export function ValidateModal({ fileContent, fileName, schemas, onClose }: Valid
                       key={i}
                       className="flex gap-3 px-4 py-3 rounded-lg bg-red-50 border border-red-100 text-sm text-red-700"
                     >
-                      <span className="font-mono shrink-0 text-red-400">{i + 1}.</span>
+                      <span className="font-mono shrink-0 text-red-400">
+                        {i + 1}.
+                      </span>
                       <span>{err}</span>
                     </li>
                   ))}
                 </ul>
               </div>
-            )
-          )}
+            ))}
         </div>
       </div>
     </div>

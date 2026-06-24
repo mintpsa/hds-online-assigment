@@ -7,7 +7,12 @@ interface DiffViewerProps {
   className?: string;
 }
 
-export function DiffViewer({ original, modified, language = "json", className = "" }: DiffViewerProps) {
+export function DiffViewer({
+  original,
+  modified,
+  language = "json",
+  className = "",
+}: DiffViewerProps) {
   return (
     <div className={`h-full w-full ${className}`}>
       <DiffEditor

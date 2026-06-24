@@ -47,7 +47,11 @@ function CheckIcon() {
       strokeWidth={1.5}
       aria-hidden="true"
     >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M4.5 12.75l6 6 9-13.5"
+      />
     </svg>
   );
 }
@@ -93,8 +97,12 @@ function DropZoneContent({ state, file, errorMessage }: ContentProps) {
     return (
       <>
         <ErrorIcon />
-        <p className="font-medium text-sm text-center">{errorMessage ?? "Unsupported file type"}</p>
-        <p className="text-xs opacity-75">Click or drop again to try another file</p>
+        <p className="font-medium text-sm text-center">
+          {errorMessage ?? "Unsupported file type"}
+        </p>
+        <p className="text-xs opacity-75">
+          Click or drop again to try another file
+        </p>
       </>
     );
   }
@@ -104,7 +112,9 @@ function DropZoneContent({ state, file, errorMessage }: ContentProps) {
       <>
         <ErrorIcon />
         <p className="font-medium text-sm">Wrong file type</p>
-        <p className="text-xs opacity-75">Only .json, .yaml, and .yml files are accepted</p>
+        <p className="text-xs opacity-75">
+          Only .json, .yaml, and .yml files are accepted
+        </p>
       </>
     );
   }
@@ -121,13 +131,20 @@ function DropZoneContent({ state, file, errorMessage }: ContentProps) {
   return (
     <>
       <UploadIcon />
-      <p className="font-medium text-sm">Drop a config file here, or click to browse</p>
+      <p className="font-medium text-sm">
+        Drop a config file here, or click to browse
+      </p>
       <p className="text-xs opacity-75">Accepts .json, .yaml, .yml</p>
     </>
   );
 }
 
-export function FileDropZone({ onFile, onError, accept, className = "" }: FileDropZoneProps) {
+export function FileDropZone({
+  onFile,
+  onError,
+  accept,
+  className = "",
+}: FileDropZoneProps) {
   const [lastFile, setLastFile] = useState<File | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
 
@@ -167,7 +184,11 @@ export function FileDropZone({ onFile, onError, accept, className = "" }: FileDr
         className="hidden"
         {...inputHandlers}
       />
-      <DropZoneContent state={dropState} file={lastFile} errorMessage={lastError} />
+      <DropZoneContent
+        state={dropState}
+        file={lastFile}
+        errorMessage={lastError}
+      />
     </div>
   );
 }

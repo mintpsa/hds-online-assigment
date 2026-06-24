@@ -33,12 +33,16 @@ const App = () => {
 
   // Schema state
   const [schemas, setSchemas] = useState<StoredSchema[]>([]);
-  const [selectedSchema, setSelectedSchema] = useState<StoredSchema | null>(null);
+  const [selectedSchema, setSelectedSchema] = useState<StoredSchema | null>(
+    null,
+  );
   const [editorDraft, setEditorDraft] = useState<string>("");
   const [isDirty, setIsDirty] = useState(false);
 
   // Validate modal state
-  const [validateTarget, setValidateTarget] = useState<ValidateTarget | null>(null);
+  const [validateTarget, setValidateTarget] = useState<ValidateTarget | null>(
+    null,
+  );
 
   const showEditor = !!(leftFile || rightFile);
   const language = leftFile?.name.endsWith(".json") ? "json" : "yaml";
@@ -79,7 +83,9 @@ const App = () => {
   function handleSaveSchema() {
     if (!selectedSchema) return;
     const updated = { ...selectedSchema, content: editorDraft };
-    setSchemas((prev) => prev.map((s) => (s.name === selectedSchema.name ? updated : s)));
+    setSchemas((prev) =>
+      prev.map((s) => (s.name === selectedSchema.name ? updated : s)),
+    );
     setSelectedSchema(updated);
     setIsDirty(false);
   }
@@ -94,7 +100,9 @@ const App = () => {
   return (
     <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
       <header className="px-6 bg-white border-b border-gray-200 shrink-0 flex items-end gap-6">
-        <h1 className="text-lg font-semibold text-gray-800 py-3 mr-4">Slot Config Validator</h1>
+        <h1 className="text-lg font-semibold text-gray-800 py-3 mr-4">
+          Slot Config Validator
+        </h1>
         <nav className="flex gap-1">
           {TABS.map((tab) => (
             <button
@@ -149,13 +157,19 @@ const App = () => {
             <ActionButtons
               disabled={!leftFile}
               onGenerateSchema={handleGenerateSchema}
-              onGenerateReport={() => console.log("generate report", leftFile?.name)}
+              onGenerateReport={() =>
+                console.log("generate report", leftFile?.name)
+              }
             />
           </div>
 
           {showEditor && (
             <div className="flex-1 overflow-hidden">
-              <DiffViewer original={leftContent} modified={rightContent || leftContent} language={language} />
+              <DiffViewer
+                original={leftContent}
+                modified={rightContent || leftContent}
+                language={language}
+              />
             </div>
           )}
         </>
@@ -194,7 +208,9 @@ const App = () => {
             {selectedSchema ? (
               <>
                 <div className="flex items-center gap-3 px-4 py-2 bg-white border-b border-gray-200 shrink-0">
-                  <span className="text-sm text-gray-500 truncate flex-1">{selectedSchema.name}</span>
+                  <span className="text-sm text-gray-500 truncate flex-1">
+                    {selectedSchema.name}
+                  </span>
                   <button
                     onClick={handleSaveSchema}
                     disabled={!isDirty}
@@ -233,7 +249,11 @@ const App = () => {
       {validateTarget !== null && (
         <ValidateModal
           fileContent={validateTarget === "left" ? leftContent : rightContent}
-          fileName={validateTarget === "left" ? (leftFile?.name ?? "") : (rightFile?.name ?? "")}
+          fileName={
+            validateTarget === "left"
+              ? (leftFile?.name ?? "")
+              : (rightFile?.name ?? "")
+          }
           schemas={schemas}
           onClose={() => setValidateTarget(null)}
         />

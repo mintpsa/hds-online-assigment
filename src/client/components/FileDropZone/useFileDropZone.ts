@@ -1,5 +1,9 @@
 import { useCallback, useRef, useState } from "react";
-import type { AcceptedMimeType, DropState, FileDropZoneProps } from "./fileDropZone.types";
+import type {
+  AcceptedMimeType,
+  DropState,
+  FileDropZoneProps,
+} from "./fileDropZone.types";
 
 const DEFAULT_ACCEPT: AcceptedMimeType[] = [
   "application/json",
@@ -118,7 +122,14 @@ export function useFileDropZone({
   return {
     dropState,
     inputRef,
-    handlers: { onDragEnter, onDragOver, onDragLeave, onDrop, onClick, onKeyDown },
+    handlers: {
+      onDragEnter,
+      onDragOver,
+      onDragLeave,
+      onDrop,
+      onClick,
+      onKeyDown,
+    },
     inputHandlers: { onChange: onInputChange },
   };
 }

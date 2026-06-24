@@ -1,4 +1,9 @@
-export type DropState = "idle" | "drag-over" | "drag-reject" | "accepted" | "error";
+export type DropState =
+  | "idle"
+  | "drag-over"
+  | "drag-reject"
+  | "accepted"
+  | "error";
 
 export type AcceptedMimeType =
   | "application/json"
