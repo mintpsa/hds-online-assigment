@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { FileDropZone } from "./components/FileDropZone";
-import { ActionButtons } from "./components/ActionButtons";
+import { ActionButtons, ValidateButton } from "./components/ActionButtons";
 import { DiffViewer } from "./components/DiffViewer";
 import { ValidateModal } from "./components/ValidateModal";
 import { ReportModal } from "./components/ReportModal";
@@ -135,9 +135,6 @@ const App = () => {
     setValidateTarget(target);
   }
 
-  const VALIDATE_BTN =
-    "px-3 py-1.5 text-xs font-medium rounded-lg border border-blue-600 text-blue-600 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors";
-
   return (
     <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
       <header className="px-6 bg-white border-b border-gray-200 shrink-0 flex items-end gap-6">
@@ -169,12 +166,7 @@ const App = () => {
               <FileDropZone onFile={handleLeftFile} />
               {leftFile && (
                 <div className="flex justify-end">
-                  <button
-                    className={VALIDATE_BTN}
-                    onClick={() => handleValidateClick("left")}
-                  >
-                    Validate
-                  </button>
+                  <ValidateButton onClick={() => handleValidateClick("left")} />
                 </div>
               )}
             </div>
@@ -183,12 +175,9 @@ const App = () => {
               <FileDropZone onFile={handleRightFile} />
               {rightFile && (
                 <div className="flex justify-end">
-                  <button
-                    className={VALIDATE_BTN}
+                  <ValidateButton
                     onClick={() => handleValidateClick("right")}
-                  >
-                    Validate
-                  </button>
+                  />
                 </div>
               )}
             </div>

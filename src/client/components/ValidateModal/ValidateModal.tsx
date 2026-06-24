@@ -1,7 +1,7 @@
 import { useState } from "react";
-import Ajv from "ajv";
 import type { StoredSchema } from "../../types";
 import { parseFileContent } from "../../utils/parseFileContent";
+import { ajv } from "../../rules";
 
 interface ValidateModalProps {
   fileContent: string;
@@ -16,8 +16,6 @@ interface ValidationResult {
   schemaName: string;
   errors: string[];
 }
-
-const ajv = new Ajv({ allErrors: true });
 
 function validate(
   fileContent: string,

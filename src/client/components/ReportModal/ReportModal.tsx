@@ -1,8 +1,8 @@
 import { useState } from "react";
 import type React from "react";
-import Ajv from "ajv";
 import type { StoredSchema } from "../../types";
 import { parseFileContent } from "../../utils/parseFileContent";
+import { ajv } from "../../rules";
 
 export interface ReportModalProps {
   leftFile: File;
@@ -15,8 +15,6 @@ export interface ReportModalProps {
 }
 
 // ── validation ────────────────────────────────────────────────────────────────
-
-const ajv = new Ajv({ allErrors: true });
 
 function runValidation(
   content: string,

@@ -1,3 +1,18 @@
+const OUTLINE_BUTTON_CLASS =
+  "px-3 py-1.5 text-xs font-medium rounded-lg border border-blue-600 text-blue-600 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors";
+
+interface ValidateButtonProps {
+  onClick: () => void;
+}
+
+export function ValidateButton({ onClick }: ValidateButtonProps) {
+  return (
+    <button className={OUTLINE_BUTTON_CLASS} onClick={onClick}>
+      Validate
+    </button>
+  );
+}
+
 interface ActionButtonsProps {
   disabled: boolean;
   reportDisabled: boolean;
