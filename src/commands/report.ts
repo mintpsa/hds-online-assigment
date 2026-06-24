@@ -58,7 +58,10 @@ function buildTextDiff(configOld: unknown, configNew: unknown): string {
   return lines.join("\n");
 }
 
-function buildValidationSection(label: string, report: ValidationReport): string {
+function buildValidationSection(
+  label: string,
+  report: ValidationReport,
+): string {
   const status = report.valid ? "VALID" : "INVALID";
   if (report.findings.length === 0) {
     return `### ${label}\n\n**Status:** ${status} — no issues found.\n`;

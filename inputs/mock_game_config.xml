@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<game_config>
+  <game_name>HDS Coding Assignment</game_name>
+  <slot_machine_id>SLOT_ENV_042</slot_machine_id>
+  <app_version_target>&gt;=2.1.0</app_version_target>
+  
+  <bet_levels>
+    <bet_level>10</bet_level>
+    <bet_level>50</bet_level>
+    <bet_level>100</bet_level>
+    <bet_level>250</bet_level>
+    <bet_level>500</bet_level>
+    <bet_level>1000</bet_level>
+    <bet_level>5000</bet_level>
+  </bet_levels>
+  
+  <reel_symbols>
+    <ID_00>WILD</ID_00>
+    <ID_01>SCATTER_BONUS</ID_01>
+    <ID_02>HIGH_ARTIFACT</ID_02>
+    <ID_03>HIGH_EXPLORER</ID_03>
+    <ID_04>MID_COMPASS</ID_04>
+    <ID_05>MID_MAP</ID_05>
+    <ID_06>LOW_A</ID_06>
+    <ID_07>LOW_K</ID_07>
+    <ID_08>LOW_Q</ID_08>
+    <ID_09>LOW_J</ID_09>
+    <ID_10>LOW_10</ID_10>
+  </reel_symbols>
+  
+  <payout_table>
+    <HIGH_ARTIFACT>
+      <count_3>50</count_3>
+      <count_4>200</count_4>
+      <count_5>1000</count_5>
+    </HIGH_ARTIFACT>
+    <HIGH_EXPLORER>
+      <count_3>40</count_3>
+      <count_4>150</count_4>
+      <count_5>750</count_5>
+    </HIGH_EXPLORER>
+    <MID_COMPASS>
+      <count_3>20</count_3>
+      <count_4>75</count_4>
+      <count_5>250</count_5>
+    </MID_COMPASS>
+    <LOW_A>
+      <count_3>5</count_3>
+      <count_4>15</count_4>
+      <count_5>50</count_5>
+    </LOW_A>
+    <LOW_K>
+      <count_3>5</count_3>
+      <count_4>15</count_4>
+      <count_5>50</count_5>
+    </LOW_K>
+  </payout_table>
+  
+  <feature_flags>
+    <is_tournament_enabled>true</is_tournament_enabled>
+    <is_jackpot_enabled>true</is_jackpot_enabled>
+    <enable_buy_feature>false</enable_buy_feature>
+    <use_high_res_assets>true</use_high_res_assets>
+    <enable_haptic_feedback>true</enable_haptic_feedback>
+  </feature_flags>
+  
+  <event_schedule>
+    <event>
+      <event_id>EVT_GOLDEN_WEEKEND</event_id>
+      <event_name>Golden Weekend Madness</event_name>
+      <start_date>2026-06-13T00:00:00Z</start_date>
+      <end_date>2026-06-15T23:59:59Z</end_date>
+      <event_type>xp_multiplier</event_type>
+      <multiplier_value>2.0</multiplier_value>
+    </event>
+  </event_schedule>
+  
+  <rewards>
+    <daily_login_base>1000</daily_login_base>
+    <daily_login_streak_multiplier>0.2</daily_login_streak_multiplier>
+    <ad_watch_reward>500</ad_watch_reward>
+    <social_share_reward>2500</social_share_reward>
+    <level_up_base>5000</level_up_base>
+  </rewards>
+  
+  <jackpot_settings>
+    <jackpot_type>progressive</jackpot_type>
+    <currency>coins</currency>
+    <tiers>
+      <mini>
+        <seed>1000</seed>
+        <contribution_pct>0.01</contribution_pct>
+      </mini>
+      <minor>
+        <seed>5000</seed>
+        <contribution_pct>0.02</contribution_pct>
+      </minor>
+      <major>
+        <seed>25000</seed>
+        <contribution_pct>0.03</contribution_pct>
+      </major>
+      <grand>
+        <seed>1000000</seed>
+        <contribution_pct>0.04</contribution_pct>
+      </grand>
+    </tiers>
+  </jackpot_settings>
+  
+  <player_segments>
+    <segment>
+      <segment_id>SEG_WHALE</segment_id>
+      <segment_name>Whales</segment_name>
+      <conditions>
+        <lifetime_value_usd>
+          <gte>1000</gte>
+        </lifetime_value_usd>
+      </conditions>
+      <overrides>
+        <bet_limit_multiplier>5.0</bet_limit_multiplier>
+        <vip_support>true</vip_support>
+      </overrides>
+    </segment>
+    <segment>
+      <segment_id>SEG_NEW</segment_id>
+      <segment_name>New Players</segment_name>
+      <conditions>
+        <days_since_install>
+          <lte>3</lte>
+        </days_since_install>
+      </conditions>
+      <overrides>
+        <xp_multiplier>2.0</xp_multiplier>
+        <show_tutorial>true</show_tutorial>
+      </overrides>
+    </segment>
+  </player_segments>
+  
+  <liveops_campaign_settings>
+    <campaign>
+      <campaign_id>CAMP_SUMMER_26</campaign_id>
+      <active_campaign>Summer Slots Fiesta</active_campaign>
+      <ui_theme>tropical_beach</ui_theme>
+      <promotional_offers>
+        <offer>
+          <pack_id>starter_summer</pack_id>
+          <price_usd>1.99</price_usd>
+          <coins>50000</coins>
+          <bonus_spins>10</bonus_spins>
+        </offer>
+        <offer>
+          <pack_id>mega_summer</pack_id>
+          <price_usd>19.99</price_usd>
+          <coins>750000</coins>
+          <bonus_spins>100</bonus_spins>
+        </offer>
+      </promotional_offers>
+    </campaign>
+  </liveops_campaign_settings>
+</game_config>
