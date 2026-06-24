@@ -18,8 +18,10 @@ export function DiffViewer({
 }: DiffViewerProps) {
   function handleMount(diffEditor: editor.IStandaloneDiffEditor) {
     if (!onModifiedChange) return;
-    diffEditor.getModifiedEditor().onDidChangeModelContent(() => {
-      onModifiedChange(diffEditor.getModifiedEditor().getValue());
+    const modifiedEditor = diffEditor.getModifiedEditor();
+    onModifiedChange(modifiedEditor.getValue());
+    modifiedEditor.onDidChangeModelContent(() => {
+      onModifiedChange(modifiedEditor.getValue());
     });
   }
 
