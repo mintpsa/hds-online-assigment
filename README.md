@@ -1,6 +1,6 @@
 # HDS Coding Assessment — Slot Game Config Validator
 
-A CLI tool that reads slot game configuration files and produces a validation report.
+A tool for reading, validating, and comparing slot game configuration files. Available as a **CLI** for scripting and CI pipelines, and as a **web application** for interactive use by engineers, QA, and LiveOps teams.
 
 ## What it does
 
@@ -8,6 +8,74 @@ A CLI tool that reads slot game configuration files and produces a validation re
 - **Flags risks** — highlights suspicious RTP values, payout table anomalies, or other values that warrant manual review
 - **Diffs versions** — compares two config snapshots and reports field-level changes
 - **Reports for multiple audiences** — human-readable CLI output for engineers and QA; JSON output for LiveOps tooling
+
+---
+
+## Web application
+
+The web UI provides a browser-based interface for the same validation and diffing functionality, without needing to build or run the CLI.
+
+### Start the dev server
+
+```bash
+npm run dev
+```
+
+Then open [http://localhost:5173](http://localhost:5173).
+
+### Features
+
+**Differ tab**
+
+- Drag-and-drop (or click to browse) to upload one or two config files — JSON or YAML
+- Side-by-side Monaco diff editor shows changes between the two files with syntax highlighting
+- When only one file is uploaded, the right pane is editable so you can make changes and compare inline
+- **Validate** button per side — picks a stored schema and runs AJV validation, showing all errors
+- **Generate schema** — scaffolds a JSON Schema draft-07 from the uploaded config and adds it to the Schemas tab
+- **Generate report** — opens a modal with filenames, validation results for both sides (against a single chosen schema), a diff summary (counts of added/removed/changed fields), and a full field-level change list
+
+**Schemas tab**
+
+- Sidebar lists all stored schemas for the session
+- Monaco editor lets you view and edit any schema; Save auto-formats the JSON
+- Schema name stays in sync with the `title` field as you type
+- **New** — creates an empty schema skeleton
+- **Upload** — imports an existing `.json` schema file from disk
+
+### Custom AJV keywords
+
+Schemas loaded in the web UI support two custom keywords for array fields:
+
+| Keyword        | Value  | Effect                                                                        |
+| -------------- | ------ | ----------------------------------------------------------------------------- |
+| `isIncreasing` | `true` | Fails validation if any element is not strictly greater than the previous one |
+| `isDecreasing` | `true` | Fails validation if any element is not strictly less than the previous one    |
+
+Example — validate that `bet_levels` are always in ascending order:
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Slot Config",
+  "type": "object",
+  "properties": {
+    "bet_levels": {
+      "type": "array",
+      "isIncreasing": true
+    }
+  }
+}
+```
+
+### Build for production
+
+```bash
+npm run build
+```
+
+Static assets are written to `dist/`. Serve with any static file server.
+
+---
 
 ## Commands
 
@@ -230,9 +298,16 @@ npx eslint .        # lint
 
 ```
 src/
-  index.ts          # CLI entry point
-  parser/           # Config file deserialization
-  rules/            # Individual validation rules
-  diff/             # Version comparison logic
-  reporter/         # Output formatting (text, JSON)
+  index.ts              # CLI entry point
+  commands/             # validate, diff, summarize, report, io commands
+  rules/                # Individual validation rules
+  services/             # Business logic (validation, diff, summarize)
+  llm/                  # LLM client interface + OpenRouter / LM Studio adapters
+  types/                # Shared TypeScript types
+  client/               # Web application (React + Vite)
+    App.tsx             # Root component — tab state, file state, modal orchestration
+    types.ts            # Shared types (StoredSchema)
+    rules/              # Custom AJV keywords (isIncreasing, isDecreasing)
+    components/         # UI components (FileDropZone, DiffViewer, ValidateModal, ReportModal, …)
+    utils/              # Client utilities (parseFileContent, generateJsonSchema, readFileText)
 ```
