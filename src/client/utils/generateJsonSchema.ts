@@ -17,7 +17,13 @@ function inferSchema(value: unknown): Record<string, unknown> {
 }
 
 export function generateJsonSchema(jsonText: string, title: string): string {
-  const value = JSON.parse(jsonText) as unknown;
+  return generateJsonSchemaFromObject(JSON.parse(jsonText) as unknown, title);
+}
+
+export function generateJsonSchemaFromObject(
+  value: unknown,
+  title: string,
+): string {
   const schema = {
     $schema: "http://json-schema.org/draft-07/schema#",
     title,

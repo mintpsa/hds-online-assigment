@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { generateJsonSchema } from "./generateJsonSchema";
+import {
+  generateJsonSchema,
+  generateJsonSchemaFromObject,
+} from "./generateJsonSchema";
 
 describe("generateJsonSchema", () => {
   it("includes $schema, title, and root type", () => {
@@ -70,5 +73,55 @@ describe("generateJsonSchema", () => {
 
   it("returns valid JSON string", () => {
     expect(() => JSON.parse(generateJsonSchema('{"x":1}', "t"))).not.toThrow();
+  });
+});
+
+describe("generateJsonSchemaFromObject", () => {
+  it("accepts a plain JS object directly without JSON parsing", () => {
+    const result = JSON.parse(generateJsonSchemaFromObject({ a: 1 }, "t"));
+    expect(result.type).toBe("object");
+    expect(result.properties.a).toEqual({ type: "number" });
+  });
+
+  it("accepts a YAML-parsed object (simulated)", () => {
+    // Mirrors what App.tsx does: yaml.parse() → generateJsonSchemaFromObject
+    const yamlParsed = { gameName: "slots", rtp: 96.5, enabled: true };
+    const result = JSON.parse(generateJsonSchemaFromObject(yamlParsed, "game"));
+    expect(result.properties.gameName).toEqual({ type: "string" });
+    expect(result.properties.rtp).toEqual({ type: "number" });
+    expect(result.properties.enabled).toEqual({ type: "boolean" });
+  });
+
+  it("sets title from argument", () => {
+    const result = JSON.parse(generateJsonSchemaFromObject({}, "my-schema"));
+    expect(result.title).toBe("my-schema");
+  });
+
+  it("handles nested objects from YAML-like structure", () => {
+    const obj = { meta: { version: 2, tags: ["a", "b"] } };
+    const result = JSON.parse(generateJsonSchemaFromObject(obj, "t"));
+    expect(result.properties.meta.type).toBe("object");
+    expect(result.properties.meta.properties.version).toEqual({
+      type: "number",
+    });
+    expect(result.properties.meta.properties.tags).toEqual({ type: "array" });
+  });
+
+  it("handles arrays at the root", () => {
+    const result = JSON.parse(generateJsonSchemaFromObject([1, 2, 3], "t"));
+    expect(result.type).toBe("array");
+    expect(result.items).toBeUndefined();
+  });
+
+  it("handles null", () => {
+    const result = JSON.parse(generateJsonSchemaFromObject(null, "t"));
+    expect(result.type).toBe("null");
+  });
+
+  it("produces the same schema as generateJsonSchema for equivalent input", () => {
+    const obj = { level: 1, name: "basic", active: false };
+    const fromObj = generateJsonSchemaFromObject(obj, "t");
+    const fromJson = generateJsonSchema(JSON.stringify(obj), "t");
+    expect(fromObj).toBe(fromJson);
   });
 });

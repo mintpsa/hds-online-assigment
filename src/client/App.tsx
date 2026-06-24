@@ -3,8 +3,10 @@ import { FileDropZone } from "./components/FileDropZone";
 import { ActionButtons } from "./components/ActionButtons";
 import { DiffViewer } from "./components/DiffViewer";
 import { ValidateModal } from "./components/ValidateModal";
+import { ReportModal } from "./components/ReportModal";
 import { readFileText } from "./utils/readFileText";
-import { generateJsonSchema } from "./utils/generateJsonSchema";
+import { generateJsonSchemaFromObject } from "./utils/generateJsonSchema";
+import { parse as parseYaml } from "yaml";
 import "./index.css";
 import { Editor } from "@monaco-editor/react";
 
@@ -44,6 +46,8 @@ const App = () => {
     null,
   );
 
+  const [showReport, setShowReport] = useState(false);
+
   const schemaUploadRef = useRef<HTMLInputElement>(null);
 
   const showEditor = !!(leftFile || rightFile);
@@ -63,7 +67,12 @@ const App = () => {
     if (!leftFile || !leftContent) return;
     try {
       const name = leftFile.name.replace(/\.[^.]+$/, "") + ".schema.json";
-      const content = generateJsonSchema(leftContent, name);
+      const ext = leftFile.name.split(".").pop()?.toLowerCase();
+      const parsed =
+        ext === "yaml" || ext === "yml"
+          ? (parseYaml(leftContent) as unknown)
+          : (JSON.parse(leftContent) as unknown);
+      const content = generateJsonSchemaFromObject(parsed, name);
       const schema: StoredSchema = { name, content };
       setSchemas((prev) => {
         const filtered = prev.filter((s) => s.name !== name);
@@ -195,10 +204,9 @@ const App = () => {
           <div className="flex items-center gap-3 px-6 py-3 bg-white border-b border-gray-200 shrink-0">
             <ActionButtons
               disabled={!leftFile}
+              reportDisabled={!leftFile}
               onGenerateSchema={handleGenerateSchema}
-              onGenerateReport={() =>
-                console.log("generate report", leftFile?.name)
-              }
+              onGenerateReport={() => setShowReport(true)}
             />
           </div>
 
@@ -208,6 +216,9 @@ const App = () => {
                 original={leftContent}
                 modified={rightContent || leftContent}
                 language={language}
+                onModifiedChange={(val) => {
+                  if (!rightFile) setRightContent(val);
+                }}
               />
             </div>
           )}
@@ -352,6 +363,20 @@ const App = () => {
             )}
           </div>
         </div>
+      )}
+
+      {showReport && leftFile && (
+        <ReportModal
+          leftFile={leftFile}
+          leftContent={leftContent}
+          rightFile={
+            rightFile ?? new File([], leftFile.name, { type: leftFile.type })
+          }
+          rightContent={rightContent}
+          rightFileUploaded={!!rightFile}
+          schemas={schemas}
+          onClose={() => setShowReport(false)}
+        />
       )}
 
       {validateTarget !== null && (

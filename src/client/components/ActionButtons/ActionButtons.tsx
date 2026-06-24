@@ -1,5 +1,6 @@
 interface ActionButtonsProps {
   disabled: boolean;
+  reportDisabled: boolean;
   onGenerateSchema: () => void;
   onGenerateReport: () => void;
 }
@@ -9,6 +10,7 @@ const BUTTON_CLASS =
 
 export function ActionButtons({
   disabled,
+  reportDisabled,
   onGenerateSchema,
   onGenerateReport,
 }: ActionButtonsProps) {
@@ -23,7 +25,7 @@ export function ActionButtons({
       </button>
       <button
         className={BUTTON_CLASS}
-        disabled={disabled}
+        disabled={reportDisabled}
         onClick={onGenerateReport}
       >
         Generate report
