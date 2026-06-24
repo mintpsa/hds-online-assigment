@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Ajv from "ajv";
+import { parse as parseYaml } from "yaml";
 
 interface StoredSchema {
   name: string;
@@ -22,8 +23,18 @@ interface ValidationResult {
 
 const ajv = new Ajv({ allErrors: true });
 
-function validate(fileContent: string, schemaContent: string): string[] {
-  const data = JSON.parse(fileContent) as unknown;
+function parseFileContent(content: string, fileName: string): unknown {
+  const ext = fileName.split(".").pop()?.toLowerCase();
+  if (ext === "yaml" || ext === "yml") return parseYaml(content) as unknown;
+  return JSON.parse(content) as unknown;
+}
+
+function validate(
+  fileContent: string,
+  fileName: string,
+  schemaContent: string,
+): string[] {
+  const data = parseFileContent(fileContent, fileName);
   const schema = JSON.parse(schemaContent) as object;
   const valid = ajv.validate(schema, data);
   if (valid) return [];
@@ -44,7 +55,7 @@ export function ValidateModal({
 
   function handlePick(schema: StoredSchema) {
     try {
-      const errors = validate(fileContent, schema.content);
+      const errors = validate(fileContent, fileName, schema.content);
       setResult({ schemaName: schema.name, errors });
       setView("results");
     } catch (e) {

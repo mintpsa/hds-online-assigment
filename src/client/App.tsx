@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { FileDropZone } from "./components/FileDropZone";
 import { ActionButtons } from "./components/ActionButtons";
 import { DiffViewer } from "./components/DiffViewer";
@@ -44,6 +44,8 @@ const App = () => {
     null,
   );
 
+  const schemaUploadRef = useRef<HTMLInputElement>(null);
+
   const showEditor = !!(leftFile || rightFile);
   const language = leftFile?.name.endsWith(".json") ? "json" : "yaml";
 
@@ -82,12 +84,49 @@ const App = () => {
 
   function handleSaveSchema() {
     if (!selectedSchema) return;
-    const updated = { ...selectedSchema, content: editorDraft };
+    let content = editorDraft;
+    try {
+      content = JSON.stringify(JSON.parse(editorDraft), null, 2);
+    } catch {
+      // not valid JSON — save as-is
+    }
+    const updated = { ...selectedSchema, content };
     setSchemas((prev) =>
       prev.map((s) => (s.name === selectedSchema.name ? updated : s)),
     );
     setSelectedSchema(updated);
+    setEditorDraft(content);
     setIsDirty(false);
+  }
+
+  function handleNewSchema() {
+    const name = `schema-${schemas.length + 1}.schema.json`;
+    const content = JSON.stringify(
+      {
+        $schema: "http://json-schema.org/draft-07/schema#",
+        title: name,
+        type: "object",
+        properties: {},
+      },
+      null,
+      2,
+    );
+    const schema: StoredSchema = { name, content };
+    setSchemas((prev) => [schema, ...prev]);
+    selectSchema(schema);
+  }
+
+  async function handleUploadSchema(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const content = await readFileText(file);
+    const schema: StoredSchema = { name: file.name, content };
+    setSchemas((prev) => {
+      const filtered = prev.filter((s) => s.name !== file.name);
+      return [schema, ...filtered];
+    });
+    selectSchema(schema);
+    e.target.value = "";
   }
 
   function handleValidateClick(target: ValidateTarget) {
@@ -178,9 +217,60 @@ const App = () => {
       {activeTab === "schemas" && (
         <div className="flex-1 flex overflow-hidden">
           <aside className="w-56 shrink-0 bg-white border-r border-gray-200 flex flex-col overflow-y-auto">
-            <p className="px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-              Stored schemas
-            </p>
+            <div className="px-4 py-3 flex items-center justify-between border-b border-gray-100">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                Stored schemas
+              </p>
+              <div className="flex gap-1">
+                <button
+                  onClick={handleNewSchema}
+                  title="New schema"
+                  className="p-1 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 4.5v15m7.5-7.5h-15"
+                    />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => schemaUploadRef.current?.click()}
+                  title="Upload schema"
+                  className="p-1 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+                    />
+                  </svg>
+                </button>
+                <input
+                  ref={schemaUploadRef}
+                  type="file"
+                  accept=".json"
+                  className="hidden"
+                  onChange={handleUploadSchema}
+                />
+              </div>
+            </div>
             {schemas.length === 0 ? (
               <p className="px-4 text-sm text-gray-400">None yet.</p>
             ) : (
@@ -230,8 +320,26 @@ const App = () => {
                       fontSize: 13,
                     }}
                     onChange={(val) => {
-                      setEditorDraft(val ?? "");
-                      setIsDirty((val ?? "") !== selectedSchema.content);
+                      const draft = val ?? "";
+                      setEditorDraft(draft);
+                      setIsDirty(draft !== selectedSchema.content);
+                      try {
+                        const parsed = JSON.parse(draft) as { title?: string };
+                        const newName = parsed.title?.trim();
+                        if (newName && newName !== selectedSchema.name) {
+                          const renamed = { ...selectedSchema, name: newName };
+                          setSelectedSchema(renamed);
+                          setSchemas((prev) =>
+                            prev.map((s) =>
+                              s.name === selectedSchema.name
+                                ? { ...s, name: newName }
+                                : s,
+                            ),
+                          );
+                        }
+                      } catch {
+                        // not valid JSON yet — ignore
+                      }
                     }}
                     height="100%"
                   />

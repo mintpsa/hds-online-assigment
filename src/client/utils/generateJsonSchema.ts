@@ -2,10 +2,7 @@ function inferSchema(value: unknown): Record<string, unknown> {
   if (value === null) return { type: "null" };
 
   if (Array.isArray(value)) {
-    return {
-      type: "array",
-      items: value.length > 0 ? inferSchema(value[0]) : {},
-    };
+    return { type: "array" };
   }
 
   if (typeof value === "object") {
@@ -13,11 +10,7 @@ function inferSchema(value: unknown): Record<string, unknown> {
     for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
       properties[k] = inferSchema(v);
     }
-    return {
-      type: "object",
-      properties,
-      required: Object.keys(value as Record<string, unknown>),
-    };
+    return { type: "object", properties };
   }
 
   return { type: typeof value };
