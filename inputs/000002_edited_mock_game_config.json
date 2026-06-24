@@ -2,7 +2,7 @@
   "game_name": "HDS Coding Assignment",
   "slot_machine_id": "SLOT_ENV_042",
   "app_version_target": ">=2.1.0",
-  "bet_levels": [10, 50, 100, 250, 500, 1000, 5000],
+  "bet_levels": ["10", "50", "100", "250", "500", "1000", "5000"],
   "reel_symbols": {
     "ID_00": "WILD",
     "ID_01": "SCATTER_BONUS",

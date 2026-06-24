@@ -157,16 +157,16 @@ The plan itself — what to build, how to structure it, what the validation rule
 
 The `summarize` command feeds the structured `ConfigDiff[]` output from the diff engine into an LLM and returns a human-readable narrative. Several decisions shape how this is built.
 
-**Separate `summarize` command, not a `--format` on `diff`.**  
+**Separate `summarize` command, not a `--format` on `diff`.**
 Summarization is asynchronous, makes an external API call, and has its own option (`--context`). Mixing it into the `diff` command as a format variant would conflate pure formatting (synchronous, deterministic) with side-effectful I/O.
 
-**`--backend` flag (`openrouter` | `lmstudio`) rather than env-only selection.**  
+**`--backend` flag (`openrouter` | `lmstudio`) rather than env-only selection.**
 Env vars supply credentials; the flag selects runtime behavior. This lets a user explicitly choose local (LM Studio, offline, no cost) vs cloud (OpenRouter) without modifying the environment.
 
-**`--context <file>` for game description rather than hardcoded domain knowledge.**  
+**`--context <file>` for game description rather than hardcoded domain knowledge.**
 Different teams ship different games. A file-based context is portable — the same `game-info.md` can be committed alongside the configs for a specific title and reused across every diff run for that game. Without a context file, the summary still works but relies on field names alone.
 
-**Structured `ConfigDiff[]` as LLM input, not raw text diff.**  
+**Structured `ConfigDiff[]` as LLM input, not raw text diff.**
 The field-level diff (dot-notation paths with old/new values) is unambiguous and concise. Raw text diff (`+`/`-` lines) requires the LLM to parse formatting that was designed for humans. Structured input also avoids token waste on unchanged context lines.
 
 **`claude-haiku-4-5` (via OpenRouter), `qwen3-4b` (via LM Studio) as defaults.**  

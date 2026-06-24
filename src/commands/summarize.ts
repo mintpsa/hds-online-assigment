@@ -8,6 +8,7 @@ import { OpenRouterClient } from "../llm/openrouter.client.js";
 import { LmStudioClient } from "../llm/lmstudio.client.js";
 import type { LlmClient } from "../llm/llm.interface.js";
 import { logger } from "../utils/logger.js";
+import { validateConfig } from "../services/validation.service.js";
 
 type Backend = "openrouter" | "lmstudio";
 
