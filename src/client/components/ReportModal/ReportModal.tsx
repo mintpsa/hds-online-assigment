@@ -180,30 +180,15 @@ function DiffSummary({ entries }: { entries: DiffEntry[] }) {
   }
 
   return (
-    <div className="flex flex-col gap-1 text-sm text-gray-700">
+    <div className="flex gap-4 text-sm">
       {added.length > 0 && (
-        <p>
-          <span className="font-medium text-green-700">
-            Added {added.length}:
-          </span>{" "}
-          {added.map((e) => e.field).join(", ")}
-        </p>
+        <span className="font-medium text-green-700">+{added.length} added</span>
       )}
       {removed.length > 0 && (
-        <p>
-          <span className="font-medium text-red-700">
-            Removed {removed.length}:
-          </span>{" "}
-          {removed.map((e) => e.field).join(", ")}
-        </p>
+        <span className="font-medium text-red-700">−{removed.length} removed</span>
       )}
       {changed.length > 0 && (
-        <p>
-          <span className="font-medium text-yellow-700">
-            Changed {changed.length}:
-          </span>{" "}
-          {changed.map((e) => e.field).join(", ")}
-        </p>
+        <span className="font-medium text-yellow-700">{changed.length} changed</span>
       )}
     </div>
   );
