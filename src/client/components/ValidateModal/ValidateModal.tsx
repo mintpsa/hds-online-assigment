@@ -4,6 +4,7 @@ import { parseFileContent } from "../../utils/parseFileContent";
 import { ajv } from "../../rules";
 
 interface ValidateModalProps {
+  title: string;
   fileContent: string;
   fileName: string;
   schemas: StoredSchema[];
@@ -37,6 +38,7 @@ function validate(
 }
 
 export function ValidateModal({
+  title,
   fileContent,
   fileName,
   schemas,
@@ -70,34 +72,47 @@ export function ValidateModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
-          {view === "pick" ? (
-            <h2 className="text-base font-semibold text-gray-800">
-              Pick a schema to validate against
-            </h2>
-          ) : (
-            <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            {view === "results" && (
               <button
                 onClick={() => setView("pick")}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-gray-400 hover:text-gray-600 transition-colors shrink-0"
                 aria-label="Back"
               >
                 ←
               </button>
-              <h2 className="text-base font-semibold text-gray-800 truncate">
-                {fileName}
-              </h2>
-              <span className="text-xs text-gray-400">vs</span>
-              <span className="text-xs text-gray-500 truncate">
-                {result?.schemaName}
-              </span>
-            </div>
-          )}
+            )}
+            <h2 className="text-base font-semibold text-gray-800 truncate">
+              {title}
+            </h2>
+            {view === "results" && result && (
+              <>
+                <span className="text-xs text-gray-400 shrink-0">vs</span>
+                <span className="text-xs text-gray-500 truncate">
+                  {result.schemaName}
+                </span>
+              </>
+            )}
+          </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors text-xl leading-none ml-4 shrink-0"
+            className="ml-4 shrink-0 p-1 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
             aria-label="Close"
           >
-            ×
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
           </button>
         </div>
 

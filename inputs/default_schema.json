@@ -1,0 +1,245 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "000001_mock_game_config.schema.json",
+  "type": "object",
+  "properties": {
+    "game_name": {
+      "type": "string"
+    },
+    "slot_machine_id": {
+      "type": "string"
+    },
+    "app_version_target": {
+      "type": "string"
+    },
+    "bet_levels": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "isIncreasing": true
+    },
+    "reel_symbols": {
+      "type": "object",
+      "properties": {
+        "ID_00": {
+          "type": "string"
+        },
+        "ID_01": {
+          "type": "string"
+        },
+        "ID_02": {
+          "type": "string"
+        },
+        "ID_03": {
+          "type": "string"
+        },
+        "ID_04": {
+          "type": "string"
+        },
+        "ID_05": {
+          "type": "string"
+        },
+        "ID_06": {
+          "type": "string"
+        },
+        "ID_07": {
+          "type": "string"
+        },
+        "ID_08": {
+          "type": "string"
+        },
+        "ID_09": {
+          "type": "string"
+        },
+        "ID_10": {
+          "type": "string"
+        }
+      }
+    },
+    "payout_table": {
+      "type": "object",
+      "properties": {
+        "HIGH_ARTIFACT": {
+          "type": "object",
+          "properties": {
+            "3": {
+              "type": "number"
+            },
+            "4": {
+              "type": "number"
+            },
+            "5": {
+              "type": "number"
+            }
+          }
+        },
+        "HIGH_EXPLORER": {
+          "type": "object",
+          "properties": {
+            "3": {
+              "type": "number"
+            },
+            "4": {
+              "type": "number"
+            },
+            "5": {
+              "type": "number"
+            }
+          }
+        },
+        "MID_COMPASS": {
+          "type": "object",
+          "properties": {
+            "3": {
+              "type": "number"
+            },
+            "4": {
+              "type": "number"
+            },
+            "5": {
+              "type": "number"
+            }
+          }
+        },
+        "LOW_A": {
+          "type": "object",
+          "properties": {
+            "3": {
+              "type": "number"
+            },
+            "4": {
+              "type": "number"
+            },
+            "5": {
+              "type": "number"
+            }
+          }
+        },
+        "LOW_K": {
+          "type": "object",
+          "properties": {
+            "3": {
+              "type": "number"
+            },
+            "4": {
+              "type": "number"
+            },
+            "5": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "feature_flags": {
+      "type": "object",
+      "properties": {
+        "is_tournament_enabled": {
+          "type": "boolean"
+        },
+        "is_jackpot_enabled": {
+          "type": "boolean"
+        },
+        "enable_buy_feature": {
+          "type": "boolean"
+        },
+        "use_high_res_assets": {
+          "type": "boolean"
+        },
+        "enable_haptic_feedback": {
+          "type": "boolean"
+        }
+      }
+    },
+    "event_schedule": {
+      "type": "array"
+    },
+    "rewards": {
+      "type": "object",
+      "properties": {
+        "daily_login_base": {
+          "type": "number"
+        },
+        "daily_login_streak_multiplier": {
+          "type": "number"
+        },
+        "ad_watch_reward": {
+          "type": "number"
+        },
+        "social_share_reward": {
+          "type": "number"
+        },
+        "level_up_base": {
+          "type": "number"
+        }
+      }
+    },
+    "jackpot_settings": {
+      "type": "object",
+      "properties": {
+        "jackpot_type": {
+          "type": "string"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "tiers": {
+          "type": "object",
+          "properties": {
+            "mini": {
+              "type": "object",
+              "properties": {
+                "seed": {
+                  "type": "number"
+                },
+                "contribution_pct": {
+                  "type": "number"
+                }
+              }
+            },
+            "minor": {
+              "type": "object",
+              "properties": {
+                "seed": {
+                  "type": "number"
+                },
+                "contribution_pct": {
+                  "type": "number"
+                }
+              }
+            },
+            "major": {
+              "type": "object",
+              "properties": {
+                "seed": {
+                  "type": "number"
+                },
+                "contribution_pct": {
+                  "type": "number"
+                }
+              }
+            },
+            "grand": {
+              "type": "object",
+              "properties": {
+                "seed": {
+                  "type": "number"
+                },
+                "contribution_pct": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "player_segments": {
+      "type": "array"
+    },
+    "liveops_campaign_settings": {
+      "type": "array"
+    }
+  }
+}

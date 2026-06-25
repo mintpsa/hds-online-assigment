@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback } from "react";
 import { FileDropZone } from "./components/FileDropZone";
 import {
   PrimaryButton,
@@ -48,6 +48,7 @@ const App = () => {
   const [showReport, setShowReport] = useState(false);
 
   const schemaUploadRef = useRef<HTMLInputElement>(null);
+  const changeFileRef = useRef<HTMLInputElement>(null);
 
   const showEditor = !!leftFile;
   const language = leftFile?.name.endsWith(".json") ? "json" : "yaml";
@@ -56,6 +57,18 @@ const App = () => {
     setLeftFile(file);
     setLeftContent(await readFileText(file));
   }
+
+  const handleChangeFile = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setLeftFile(file);
+      setLeftContent(await readFileText(file));
+      setRightContent("");
+      e.target.value = "";
+    },
+    [],
+  );
 
   function handleGenerateSchema() {
     if (!leftFile || !leftContent) return;
@@ -179,9 +192,51 @@ const App = () => {
 
       {activeTab === "differ" && (
         <>
-          <div className="shrink-0 border-b border-gray-200 bg-white p-4">
-            <FileDropZone onFile={handleLeftFile} />
-          </div>
+          {leftFile ? (
+            <div className="shrink-0 border-b border-gray-200 bg-white px-4 py-2.5 flex items-center gap-3">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-4 h-4 text-green-600 shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M4.5 12.75l6 6 9-13.5"
+                />
+              </svg>
+              <span className="text-sm font-medium text-gray-700 truncate flex-1">
+                {leftFile.name}
+              </span>
+              <span className="text-xs text-gray-400 shrink-0">
+                {leftFile.size < 1024
+                  ? `${leftFile.size} B`
+                  : leftFile.size < 1024 * 1024
+                    ? `${(leftFile.size / 1024).toFixed(1)} KB`
+                    : `${(leftFile.size / (1024 * 1024)).toFixed(1)} MB`}
+              </span>
+              <button
+                className="px-2.5 py-1 text-xs font-medium rounded border border-gray-300 text-gray-600 hover:bg-gray-50 transition-colors shrink-0"
+                onClick={() => changeFileRef.current?.click()}
+              >
+                Change
+              </button>
+              <input
+                ref={changeFileRef}
+                type="file"
+                accept=".json,.yaml,.yml"
+                className="hidden"
+                onChange={handleChangeFile}
+              />
+            </div>
+          ) : (
+            <div className="shrink-0 border-b border-gray-200 bg-white p-4">
+              <FileDropZone onFile={handleLeftFile} />
+            </div>
+          )}
 
           <div className="flex items-center gap-3 px-6 py-3 bg-white border-b border-gray-200 shrink-0">
             <PrimaryButton disabled={!leftFile} onClick={handleGenerateSchema}>
@@ -430,6 +485,9 @@ const App = () => {
 
       {validateTarget !== null && leftFile && (
         <ValidateModal
+          title={
+            validateTarget === "original" ? "Validate original" : "Validate edited"
+          }
           fileContent={
             validateTarget === "original"
               ? leftContent

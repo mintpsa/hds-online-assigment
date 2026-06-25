@@ -3,6 +3,7 @@ import type React from "react";
 import type { StoredSchema } from "../../types";
 import { parseFileContent } from "../../utils/parseFileContent";
 import { ajv } from "../../rules";
+import { downloadFile } from "../../utils/downloadFile";
 
 export interface ReportModalProps {
   leftFile: File;
@@ -100,6 +101,73 @@ function computeDiff(
   } catch {
     return [];
   }
+}
+
+// ── markdown export ───────────────────────────────────────────────────────────
+
+function generateMarkdown(
+  leftFile: File,
+  leftResult: { schemaName: string | null; errors: string[] },
+  rightResult: { schemaName: string | null; errors: string[] },
+  diffEntries: DiffEntry[],
+): string {
+  const lines: string[] = [];
+
+  lines.push(`# Config Report: ${leftFile.name}`, "");
+
+  lines.push("## Validation", "");
+
+  const formatValidation = (
+    label: string,
+    result: { schemaName: string | null; errors: string[] },
+  ) => {
+    lines.push(`### ${label}`);
+    if (!result.schemaName) {
+      lines.push("No schema selected.", "");
+      return;
+    }
+    if (result.errors.length === 0) {
+      lines.push(`✓ Valid against **${result.schemaName}**`, "");
+    } else {
+      lines.push(
+        `✗ ${result.errors.length} error(s) against **${result.schemaName}**`,
+        "",
+      );
+      result.errors.forEach((e, i) => lines.push(`${i + 1}. \`${e}\``));
+      lines.push("");
+    }
+  };
+
+  formatValidation(leftFile.name, leftResult);
+  formatValidation(`${leftFile.name} (edited)`, rightResult);
+
+  lines.push("## Diff Summary", "");
+  if (diffEntries.length === 0) {
+    lines.push("No differences found.", "");
+  } else {
+    const added = diffEntries.filter((e) => e.kind === "added").length;
+    const removed = diffEntries.filter((e) => e.kind === "removed").length;
+    const changed = diffEntries.filter((e) => e.kind === "changed").length;
+    const parts: string[] = [];
+    if (added) parts.push(`+${added} added`);
+    if (removed) parts.push(`−${removed} removed`);
+    if (changed) parts.push(`${changed} changed`);
+    lines.push(parts.join("  ·  "), "");
+  }
+
+  if (diffEntries.length > 0) {
+    lines.push(`## Changes (${diffEntries.length})`, "");
+    lines.push("| Kind | Field | Old value | New value |");
+    lines.push("|------|-------|-----------|-----------|");
+    for (const entry of diffEntries) {
+      const old = entry.oldValue !== undefined ? `\`${fmt(entry.oldValue)}\`` : "";
+      const nv = entry.newValue !== undefined ? `\`${fmt(entry.newValue)}\`` : "";
+      lines.push(`| ${entry.kind} | \`${entry.field}\` | ${old} | ${nv} |`);
+    }
+    lines.push("");
+  }
+
+  return lines.join("\n");
 }
 
 // ── sub-components ────────────────────────────────────────────────────────────
@@ -207,6 +275,7 @@ export function ReportModal({
   onClose,
 }: ReportModalProps) {
   const [schema, setSchema] = useState<StoredSchema | null>(null);
+  const [diffOpen, setDiffOpen] = useState(false);
 
   const leftResult = runValidation(leftContent, leftFile.name, schema);
   const rightResult = runValidation(rightContent, leftFile.name, schema);
@@ -278,51 +347,93 @@ export function ReportModal({
             <DiffSummary entries={diffEntries} />
           </Section>
 
-          {/* Full diff */}
+          {/* Full diff — expandable */}
           {diffEntries.length > 0 && (
-            <Section title={`Changes (${diffEntries.length})`}>
-              <ul className="flex flex-col gap-2">
-                {diffEntries.map((entry) => (
-                  <li
-                    key={entry.field}
-                    className={`flex flex-col gap-1 px-3 py-2 rounded border text-xs ${KIND_CLASSES[entry.kind]}`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase ${KIND_BADGE[entry.kind]}`}
-                      >
-                        {entry.kind}
-                      </span>
-                      <span className="font-mono font-medium">
-                        {entry.field}
-                      </span>
-                    </div>
-                    {entry.kind === "changed" && (
-                      <div className="flex flex-col gap-0.5 font-mono text-[11px] mt-0.5 break-all">
-                        <span className="text-red-600 line-through whitespace-pre-wrap">
-                          {fmt(entry.oldValue)}
+            <div className="flex flex-col gap-3">
+              <button
+                className="flex items-center gap-2 text-sm font-semibold text-gray-700 border-b border-gray-100 pb-1 w-full text-left hover:text-gray-900 transition-colors"
+                onClick={() => setDiffOpen((o) => !o)}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className={`w-3.5 h-3.5 text-gray-400 transition-transform ${diffOpen ? "rotate-90" : ""}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                  />
+                </svg>
+                Changes ({diffEntries.length})
+              </button>
+              {diffOpen && (
+                <ul className="flex flex-col gap-2">
+                  {diffEntries.map((entry) => (
+                    <li
+                      key={entry.field}
+                      className={`flex flex-col gap-1 px-3 py-2 rounded border text-xs ${KIND_CLASSES[entry.kind]}`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase ${KIND_BADGE[entry.kind]}`}
+                        >
+                          {entry.kind}
                         </span>
-                        <span className="text-gray-400 text-[10px]">↓</span>
-                        <span className="text-green-700 whitespace-pre-wrap">
-                          {fmt(entry.newValue)}
+                        <span className="font-mono font-medium">
+                          {entry.field}
                         </span>
                       </div>
-                    )}
-                    {entry.kind === "added" && (
-                      <span className="font-mono text-[11px] text-green-700 break-all whitespace-pre-wrap">
-                        {fmt(entry.newValue)}
-                      </span>
-                    )}
-                    {entry.kind === "removed" && (
-                      <span className="font-mono text-[11px] text-red-600 line-through break-all whitespace-pre-wrap">
-                        {fmt(entry.oldValue)}
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </Section>
+                      {entry.kind === "changed" && (
+                        <div className="flex flex-col gap-0.5 font-mono text-[11px] mt-0.5 break-all">
+                          <span className="text-red-600 line-through whitespace-pre-wrap">
+                            {fmt(entry.oldValue)}
+                          </span>
+                          <span className="text-gray-400 text-[10px]">↓</span>
+                          <span className="text-green-700 whitespace-pre-wrap">
+                            {fmt(entry.newValue)}
+                          </span>
+                        </div>
+                      )}
+                      {entry.kind === "added" && (
+                        <span className="font-mono text-[11px] text-green-700 break-all whitespace-pre-wrap">
+                          {fmt(entry.newValue)}
+                        </span>
+                      )}
+                      {entry.kind === "removed" && (
+                        <span className="font-mono text-[11px] text-red-600 line-through break-all whitespace-pre-wrap">
+                          {fmt(entry.oldValue)}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-3 px-6 py-3 border-t border-gray-100 shrink-0">
+          <button
+            disabled={!schema}
+            onClick={() => {
+              const md = generateMarkdown(
+                leftFile,
+                leftResult,
+                rightResult,
+                diffEntries,
+              );
+              const stem = leftFile.name.replace(/\.[^.]+$/, "");
+              downloadFile(md, `${stem}.report.md`);
+            }}
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            Export report
+          </button>
         </div>
       </div>
     </div>
