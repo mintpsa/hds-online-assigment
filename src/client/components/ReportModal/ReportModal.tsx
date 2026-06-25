@@ -160,8 +160,10 @@ function generateMarkdown(
     lines.push("| Kind | Field | Old value | New value |");
     lines.push("|------|-------|-----------|-----------|");
     for (const entry of diffEntries) {
-      const old = entry.oldValue !== undefined ? `\`${fmt(entry.oldValue)}\`` : "";
-      const nv = entry.newValue !== undefined ? `\`${fmt(entry.newValue)}\`` : "";
+      const old =
+        entry.oldValue !== undefined ? `\`${fmt(entry.oldValue)}\`` : "";
+      const nv =
+        entry.newValue !== undefined ? `\`${fmt(entry.newValue)}\`` : "";
       lines.push(`| ${entry.kind} | \`${entry.field}\` | ${old} | ${nv} |`);
     }
     lines.push("");

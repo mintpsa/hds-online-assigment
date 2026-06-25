@@ -486,7 +486,9 @@ const App = () => {
       {validateTarget !== null && leftFile && (
         <ValidateModal
           title={
-            validateTarget === "original" ? "Validate original" : "Validate edited"
+            validateTarget === "original"
+              ? "Validate original"
+              : "Validate edited"
           }
           fileContent={
             validateTarget === "original"
