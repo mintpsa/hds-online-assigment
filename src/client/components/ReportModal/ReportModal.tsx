@@ -7,9 +7,7 @@ import { ajv } from "../../rules";
 export interface ReportModalProps {
   leftFile: File;
   leftContent: string;
-  rightFile: File;
   rightContent: string;
-  rightFileUploaded?: boolean;
   schemas: StoredSchema[];
   onClose: () => void;
 }
@@ -82,11 +80,10 @@ function computeDiff(
   leftContent: string,
   leftFile: File,
   rightContent: string,
-  rightFile: File,
 ): DiffEntry[] {
   try {
     const left = flattenObject(parseFileContent(leftContent, leftFile.name));
-    const right = flattenObject(parseFileContent(rightContent, rightFile.name));
+    const right = flattenObject(parseFileContent(rightContent, leftFile.name));
     const allKeys = new Set([...Object.keys(left), ...Object.keys(right)]);
     const entries: DiffEntry[] = [];
     for (const key of allKeys) {
@@ -205,22 +202,15 @@ function DiffSummary({ entries }: { entries: DiffEntry[] }) {
 export function ReportModal({
   leftFile,
   leftContent,
-  rightFile,
   rightContent,
-  rightFileUploaded = true,
   schemas,
   onClose,
 }: ReportModalProps) {
   const [schema, setSchema] = useState<StoredSchema | null>(null);
 
   const leftResult = runValidation(leftContent, leftFile.name, schema);
-  const rightResult = runValidation(rightContent, rightFile.name, schema);
-  const diffEntries = computeDiff(
-    leftContent,
-    leftFile,
-    rightContent,
-    rightFile,
-  );
+  const rightResult = runValidation(rightContent, leftFile.name, schema);
+  const diffEntries = computeDiff(leftContent, leftFile, rightContent);
 
   return (
     <div
@@ -251,14 +241,10 @@ export function ReportModal({
               {leftFile.name}
             </div>
             <div className="flex-1 px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 text-sm font-medium text-gray-700 truncate">
-              {rightFileUploaded ? (
-                rightFile.name
-              ) : (
-                <span>
-                  {rightFile.name}{" "}
-                  <span className="text-gray-400 font-normal">(edited)</span>
-                </span>
-              )}
+              <span>
+                {leftFile.name}{" "}
+                <span className="text-gray-400 font-normal">(edited)</span>
+              </span>
             </div>
           </div>
 
@@ -280,11 +266,7 @@ export function ReportModal({
               <div className="w-px bg-gray-100 shrink-0" />
               <div className="flex-1">
                 <ValidationSection
-                  fileName={
-                    rightFileUploaded
-                      ? rightFile.name
-                      : `${rightFile.name} (edited)`
-                  }
+                  fileName={`${leftFile.name} (edited)`}
                   result={rightResult}
                 />
               </div>

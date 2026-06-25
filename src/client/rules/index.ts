@@ -1,6 +1,8 @@
 import Ajv from "ajv";
+import ajvKeywords from "ajv-keywords";
 
 export const ajv = new Ajv({ allErrors: true });
+ajvKeywords(ajv);
 
 ajv.addKeyword({
   keyword: "isIncreasing",

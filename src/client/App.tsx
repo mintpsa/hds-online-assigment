@@ -1,15 +1,21 @@
 import { useRef, useState } from "react";
 import { FileDropZone } from "./components/FileDropZone";
-import { ActionButtons, ValidateButton } from "./components/ActionButtons";
+import {
+  PrimaryButton,
+  OutlineButton,
+  DangerButton,
+} from "./components/ActionButtons";
 import { DiffViewer } from "./components/DiffViewer";
 import { ValidateModal } from "./components/ValidateModal";
 import { ReportModal } from "./components/ReportModal";
 import { readFileText } from "./utils/readFileText";
 import { generateJsonSchemaFromObject } from "./utils/generateJsonSchema";
 import { parseFileContent } from "./utils/parseFileContent";
+import { downloadFile } from "./utils/downloadFile";
 import type { StoredSchema } from "./types";
 import "./index.css";
-import { Editor } from "@monaco-editor/react";
+import { Editor, DiffEditor } from "@monaco-editor/react";
+import { InfoButton } from "./components/ActionButtons/ValidateButton";
 
 type Tab = "differ" | "schemas";
 
@@ -18,15 +24,12 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "schemas", label: "Schemas" },
 ];
 
-type ValidateTarget = "left" | "right";
-
 const App = () => {
   const [activeTab, setActiveTab] = useState<Tab>("differ");
 
   // Differ state
   const [leftFile, setLeftFile] = useState<File | null>(null);
   const [leftContent, setLeftContent] = useState<string>("");
-  const [rightFile, setRightFile] = useState<File | null>(null);
   const [rightContent, setRightContent] = useState<string>("");
 
   // Schema state
@@ -36,28 +39,22 @@ const App = () => {
   );
   const [editorDraft, setEditorDraft] = useState<string>("");
   const [isDirty, setIsDirty] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
-  // Validate modal state
-  const [validateTarget, setValidateTarget] = useState<ValidateTarget | null>(
-    null,
-  );
+  const [validateTarget, setValidateTarget] = useState<
+    "original" | "edited" | null
+  >(null);
 
   const [showReport, setShowReport] = useState(false);
 
   const schemaUploadRef = useRef<HTMLInputElement>(null);
 
-  const showEditor = !!(leftFile || rightFile);
-  const activeFile = leftFile ?? rightFile;
-  const language = activeFile?.name.endsWith(".json") ? "json" : "yaml";
+  const showEditor = !!leftFile;
+  const language = leftFile?.name.endsWith(".json") ? "json" : "yaml";
 
   async function handleLeftFile(file: File) {
     setLeftFile(file);
     setLeftContent(await readFileText(file));
-  }
-
-  async function handleRightFile(file: File) {
-    setRightFile(file);
-    setRightContent(await readFileText(file));
   }
 
   function handleGenerateSchema() {
@@ -82,6 +79,7 @@ const App = () => {
     setSelectedSchema(schema);
     setEditorDraft(schema.content);
     setIsDirty(false);
+    setIsEditing(false);
   }
 
   function handleSaveSchema() {
@@ -92,13 +90,22 @@ const App = () => {
     } catch {
       // not valid JSON — save as-is
     }
-    const updated = { ...selectedSchema, content };
+    let name = selectedSchema.name;
+    try {
+      const parsed = JSON.parse(content) as { title?: string };
+      const newName = parsed.title?.trim();
+      if (newName) name = newName;
+    } catch {
+      // ignore
+    }
+    const updated = { name, content };
     setSchemas((prev) =>
       prev.map((s) => (s.name === selectedSchema.name ? updated : s)),
     );
     setSelectedSchema(updated);
     setEditorDraft(content);
     setIsDirty(false);
+    setIsEditing(false);
   }
 
   function handleNewSchema() {
@@ -131,8 +138,19 @@ const App = () => {
     e.target.value = "";
   }
 
-  function handleValidateClick(target: ValidateTarget) {
-    setValidateTarget(target);
+  function handleClear() {
+    setLeftFile(null);
+    setLeftContent("");
+    setRightContent("");
+  }
+
+  function handleDeleteSchema() {
+    if (!selectedSchema) return;
+    setSchemas((prev) => prev.filter((s) => s.name !== selectedSchema.name));
+    setSelectedSchema(null);
+    setEditorDraft("");
+    setIsDirty(false);
+    setIsEditing(false);
   }
 
   return (
@@ -161,36 +179,53 @@ const App = () => {
 
       {activeTab === "differ" && (
         <>
-          <div className="flex shrink-0 border-b border-gray-200 bg-white">
-            <div className="flex-1 p-4 flex flex-col gap-2">
-              <FileDropZone onFile={handleLeftFile} />
-              {leftFile && (
-                <div className="flex justify-end">
-                  <ValidateButton onClick={() => handleValidateClick("left")} />
-                </div>
-              )}
-            </div>
-            <div className="w-px bg-gray-200 shrink-0" />
-            <div className="flex-1 p-4 flex flex-col gap-2">
-              <FileDropZone onFile={handleRightFile} />
-              {rightFile && (
-                <div className="flex justify-end">
-                  <ValidateButton
-                    onClick={() => handleValidateClick("right")}
-                  />
-                </div>
-              )}
-            </div>
+          <div className="shrink-0 border-b border-gray-200 bg-white p-4">
+            <FileDropZone onFile={handleLeftFile} />
           </div>
 
           <div className="flex items-center gap-3 px-6 py-3 bg-white border-b border-gray-200 shrink-0">
-            <ActionButtons
+            <PrimaryButton disabled={!leftFile} onClick={handleGenerateSchema}>
+              Generate schema
+            </PrimaryButton>
+            <PrimaryButton
               disabled={!leftFile}
-              reportDisabled={!leftFile}
-              onGenerateSchema={handleGenerateSchema}
-              onGenerateReport={() => setShowReport(true)}
-            />
+              onClick={() => setShowReport(true)}
+            >
+              Generate report
+            </PrimaryButton>
+            {leftFile && (
+              <>
+                <OutlineButton
+                  onClick={() => {
+                    const ext = leftFile.name.split(".").pop() ?? "json";
+                    const stem = leftFile.name.replace(/\.[^.]+$/, "");
+                    downloadFile(
+                      rightContent || leftContent,
+                      `${stem}.edited.${ext}`,
+                    );
+                  }}
+                >
+                  Export config
+                </OutlineButton>
+                <DangerButton onClick={handleClear}>Clear</DangerButton>
+              </>
+            )}
           </div>
+
+          {leftFile && (
+            <div className="flex shrink-0 border-b border-gray-200 bg-white">
+              <div className="flex-1 flex justify-center py-2 border-r border-gray-200">
+                <InfoButton onClick={() => setValidateTarget("original")}>
+                  Validate original
+                </InfoButton>
+              </div>
+              <div className="flex-1 flex justify-center py-2">
+                <InfoButton onClick={() => setValidateTarget("edited")}>
+                  Validate edited
+                </InfoButton>
+              </div>
+            </div>
+          )}
 
           {showEditor && (
             <div className="flex-1 overflow-hidden">
@@ -198,9 +233,7 @@ const App = () => {
                 original={leftContent}
                 modified={rightContent || leftContent}
                 language={language}
-                onModifiedChange={(val) => {
-                  if (!rightFile) setRightContent(val);
-                }}
+                onModifiedChange={setRightContent}
               />
             </div>
           )}
@@ -294,48 +327,86 @@ const App = () => {
                   <span className="text-sm text-gray-500 truncate flex-1">
                     {selectedSchema.name}
                   </span>
-                  <button
-                    onClick={handleSaveSchema}
-                    disabled={!isDirty}
-                    className="px-4 py-1.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  >
-                    Save
-                  </button>
+                  {isEditing ? (
+                    <>
+                      <OutlineButton
+                        onClick={() => {
+                          setEditorDraft(selectedSchema.content);
+                          setIsDirty(false);
+                          setIsEditing(false);
+                        }}
+                      >
+                        Cancel
+                      </OutlineButton>
+                      <PrimaryButton
+                        onClick={handleSaveSchema}
+                        disabled={!isDirty}
+                      >
+                        Save
+                      </PrimaryButton>
+                    </>
+                  ) : (
+                    <>
+                      <DangerButton onClick={handleDeleteSchema}>
+                        Delete
+                      </DangerButton>
+                      <OutlineButton
+                        onClick={() =>
+                          downloadFile(
+                            selectedSchema.content,
+                            selectedSchema.name,
+                          )
+                        }
+                      >
+                        Export
+                      </OutlineButton>
+                      <OutlineButton onClick={() => setIsEditing(true)}>
+                        Edit
+                      </OutlineButton>
+                    </>
+                  )}
                 </div>
                 <div className="flex-1 overflow-hidden">
-                  <Editor
-                    value={editorDraft}
-                    language="json"
-                    theme="vs-dark"
-                    options={{
-                      minimap: { enabled: false },
-                      scrollBeyondLastLine: false,
-                      fontSize: 13,
-                    }}
-                    onChange={(val) => {
-                      const draft = val ?? "";
-                      setEditorDraft(draft);
-                      setIsDirty(draft !== selectedSchema.content);
-                      try {
-                        const parsed = JSON.parse(draft) as { title?: string };
-                        const newName = parsed.title?.trim();
-                        if (newName && newName !== selectedSchema.name) {
-                          const renamed = { ...selectedSchema, name: newName };
-                          setSelectedSchema(renamed);
-                          setSchemas((prev) =>
-                            prev.map((s) =>
-                              s.name === selectedSchema.name
-                                ? { ...s, name: newName }
-                                : s,
-                            ),
-                          );
-                        }
-                      } catch {
-                        // not valid JSON yet — ignore
-                      }
-                    }}
-                    height="100%"
-                  />
+                  {isEditing ? (
+                    <DiffEditor
+                      original={selectedSchema.content}
+                      modified={editorDraft}
+                      language="json"
+                      theme="vs-dark"
+                      options={{
+                        minimap: { enabled: false },
+                        scrollBeyondLastLine: false,
+                        fontSize: 13,
+                        renderSideBySide: true,
+                        originalEditable: false,
+                      }}
+                      onMount={(diffEditor) => {
+                        diffEditor
+                          .getModifiedEditor()
+                          .onDidChangeModelContent(() => {
+                            const val = diffEditor
+                              .getModifiedEditor()
+                              .getValue();
+                            setEditorDraft(val);
+                            setIsDirty(val !== selectedSchema.content);
+                          });
+                      }}
+                      height="100%"
+                    />
+                  ) : (
+                    <Editor
+                      value={selectedSchema.content}
+                      language="json"
+                      theme="vs-dark"
+                      options={{
+                        readOnly: true,
+                        minimap: { enabled: false },
+                        scrollBeyondLastLine: false,
+                        fontSize: 13,
+                      }}
+                      height="100%"
+                    />
+                  )}
                 </div>
               </>
             ) : (
@@ -351,23 +422,23 @@ const App = () => {
         <ReportModal
           leftFile={leftFile}
           leftContent={leftContent}
-          rightFile={
-            rightFile ?? new File([], leftFile.name, { type: leftFile.type })
-          }
           rightContent={rightContent}
-          rightFileUploaded={!!rightFile}
           schemas={schemas}
           onClose={() => setShowReport(false)}
         />
       )}
 
-      {validateTarget !== null && (
+      {validateTarget !== null && leftFile && (
         <ValidateModal
-          fileContent={validateTarget === "left" ? leftContent : rightContent}
+          fileContent={
+            validateTarget === "original"
+              ? leftContent
+              : rightContent || leftContent
+          }
           fileName={
-            validateTarget === "left"
-              ? (leftFile?.name ?? "")
-              : (rightFile?.name ?? "")
+            validateTarget === "original"
+              ? leftFile.name
+              : `${leftFile.name} (edited)`
           }
           schemas={schemas}
           onClose={() => setValidateTarget(null)}
